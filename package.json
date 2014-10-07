@@ -1,0 +1,26 @@
+{
+  "name": "spatula",
+  "version": "0.0.0",
+  "description": "Flip your AWS Stacks into existance with Spatula: The CloudFormation Javascript Library.",
+  "main": "index.js",
+  "scripts": {
+    "test": "grunt nodeunit"
+  },
+  "keywords": [
+    "AWS",
+    "CloudFormation",
+    "JSON",
+    "Amazon",
+    "Web",
+    "Services"
+  ],
+  "author": "OpenWhere, Inc.",
+  "dependencies" : {
+    "lodash": "~2.4.1"
+  },
+  "devDependencies" : {
+    "grunt": "~0.4.1",
+    "grunt-cli": "~0.1.13",
+    "grunt-contrib-nodeunit": "~0.4.1"
+  }
+}
