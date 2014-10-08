@@ -8,7 +8,8 @@ module.exports = function(grunt) {
         jshint: {
             all: [
                 'Gruntfile.js',
-                'tasks/*.js'
+                'lib/**/*.js',
+                'test/*.js'
             ],
             options: {
                 jshintrc: '.jshintrc'
@@ -20,7 +21,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-nodeunit');
 
-    // Whenever the "test" task is run, run some basic tests.
+    // Whenever the 'test' task is run, run some basic tests.
     var path = require('path');
     grunt.registerTask('test', function(which) {
         var test = path.join(__dirname, 'test', which + '.js');
