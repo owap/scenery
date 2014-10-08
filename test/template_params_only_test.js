@@ -21,8 +21,9 @@ exports.testTemplateOnlyParameters = function(test){
     // Read saved template
     var fs = require('fs');
     var tLoaded = Template.parse(filePath);
-    test.expect(4);
+    test.expect(6);
 
+    // Test that the template we load equals the one we created above
     test.deepEqual(tLoaded, t,
             'The template loaded from a file should be equal to the template which generated the file');
     test.ok((paramKey in tLoaded.template.Parameters),
@@ -32,5 +33,24 @@ exports.testTemplateOnlyParameters = function(test){
     test.strictEqual(tLoaded.template.Parameters[paramKey].Description, paramDesc,
             'Param description should equal the description we assign it');
 
-    test.done();
+    // Assert that this template is invalid because there are no Resources (only Parameters)
+    function validationCallback(isValid, message){
+        test.ok(!isValid);
+        test.done();
+    }
+    function validationCallback2(isValid, message){
+    if(!isValid){
+        console.log('CloudFormation template is invalid because:', message);
+    } else {
+        console.log(message);
+    }
+}
+
+    // Assert that no errors are thrown when invoking Validate
+    test.doesNotThrow(function(){
+        var Validator = require('../lib/Validator.js');
+        var v = new Validator(filePath);
+        v.validate(validationCallback2);
+        v.validate(validationCallback);
+    });
 };
