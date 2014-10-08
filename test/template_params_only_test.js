@@ -38,19 +38,11 @@ exports.testTemplateOnlyParameters = function(test){
         test.ok(!isValid);
         test.done();
     }
-    function validationCallback2(isValid, message){
-    if(!isValid){
-        console.log('CloudFormation template is invalid because:', message);
-    } else {
-        console.log(message);
-    }
-}
 
     // Assert that no errors are thrown when invoking Validate
     test.doesNotThrow(function(){
         var Validator = require('../lib/Validator.js');
         var v = new Validator(filePath);
-        v.validate(validationCallback2);
         v.validate(validationCallback);
     });
 };
