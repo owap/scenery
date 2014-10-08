@@ -64,7 +64,7 @@ The following (invalid) template was passed to the validator:
 
 The Validator, when run with the sample code above, produced the following output:
 
-```json
+```
 CloudFormation template is invalid because: { [Error: Command failed:
 A client error (ValidationError) occurred when calling the ValidateTemplate operation: Template format error: At least one Resources member must be defined.
 ] killed: false, code: 255, signal: null }
