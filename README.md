@@ -1,10 +1,6 @@
 # Spatula: CloudFormation Templates in Javascript
 
 ## Setup
-+ [Install the `aws-cli`](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html)
-(for validating Templates):
-    - `sudo pip install awscli`
-    - `aws configure`
 + Run `npm install` in the root spatula directory
 
 ## Developing
@@ -21,7 +17,7 @@ TODO
 ## Validing CloudFormation Templates
 Assuming that your CloudFormation script is kept in a file `/tmp/MyCFTemplate.json`,
 the following block of code shows how the Validator class can be used to invoke
-the `aws-cli` to validate your template.
+the `aws-sdk` to validate your template.
 
 ```javascript
 // First, define a callback function to be invoked after validation
@@ -65,10 +61,11 @@ The following (invalid) template was passed to the validator:
 The Validator, when run with the sample code above, produced the following output:
 
 ```
-CloudFormation template is invalid because: { [Error: Command failed:
-A client error (ValidationError) occurred when calling the ValidateTemplate operation: Template format error: At least one Resources member must be defined.
-] killed: false, code: 255, signal: null }
+CloudFormation template is invalid because: { [ConfigError: Missing region in config]
+message: 'Missing region in config',
+code: 'ConfigError',
+time: Fri Oct 10 2014 15:28:45 GMT-0400 (EDT) }
 ```
 
-As you can see, the output from the `aws-cli` validator is passed through the
+As you can see, the output from the `aws-sdk` is passed through the
 `message` var of the `validationCallback` function we defined above.
