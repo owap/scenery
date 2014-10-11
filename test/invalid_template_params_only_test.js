@@ -6,11 +6,12 @@
  **/
 var Template = require('../lib/Template.js');
 var Validator = require('../lib/Validator.js');
+var fs = require('fs');
 
 exports.testTemplateOnlyParameters = function(test){
     // Create and save the template
     var t = new Template();
-    var filePath = '/tmp/invalid-test-template.json';
+    var filePath = '/tmp/invalid_test_template.json';
 
     var paramKey = 'TestParam',
         paramValue = 'This is a test',
@@ -20,9 +21,8 @@ exports.testTemplateOnlyParameters = function(test){
     t.save(filePath);
 
     // Read saved template
-    var fs = require('fs');
     var tLoaded = Template.parse(filePath);
-    test.expect(6);
+    test.expect(7);
 
     // Test that the template we load equals the one we created above
     test.deepEqual(tLoaded, t,
@@ -37,6 +37,8 @@ exports.testTemplateOnlyParameters = function(test){
     // Assert that this template is invalid because there are no Resources (only Parameters)
     function validationCallback(isValid, message){
         test.ok(!isValid);
+        test.ok(message.message.indexOf(
+            'At least one Resources member must be defined') > -1);
         test.done();
     }
 
