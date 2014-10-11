@@ -8,7 +8,7 @@ var Template = require('../lib/Template.js');
 var Validator = require('../lib/Validator.js');
 var fs = require('fs');
 
-exports.testTemplateOnlyParameters = function(test){
+exports.testInvalidTemplateParamsOnly = function(test){
     // Create and save the template
     var t = new Template();
     var filePath = '/tmp/invalid_test_template.json';
