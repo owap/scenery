@@ -4,12 +4,13 @@
  * Attempt to create a CloudFormation template that contains nothing but
  * some parameters
  **/
-exports.testTemplateOnlyParameters = function(test){
+var Template = require('../lib/Template.js');
+var Validator = require('../lib/Validator.js');
 
+exports.testTemplateOnlyParameters = function(test){
     // Create and save the template
-    var Template = require('../lib/Template.js');
     var t = new Template();
-    var filePath = '/tmp/test-template.json';
+    var filePath = '/tmp/invalid-test-template.json';
 
     var paramKey = 'TestParam',
         paramValue = 'This is a test',
@@ -41,7 +42,6 @@ exports.testTemplateOnlyParameters = function(test){
 
     // Assert that no errors are thrown when invoking Validate
     test.doesNotThrow(function(){
-        var Validator = require('../lib/Validator.js');
         var v = new Validator(filePath);
         v.validate(validationCallback);
     });
