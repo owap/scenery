@@ -1,20 +1,15 @@
 'use strict';
 
 /**
- * Attempt to create a template containing an ec2 and elasticache instance.
+ * Attempt to create a template containing an elasticache instance.
  **/
 var Template = require('../lib/Template.js');
 var Validator = require('../lib/Validator.js');
 
 exports.testJustEC2 = function(test){
-    // Set up the template
+    // Create the template
     var t = new Template();
-    var filePath = '/tmp/minimum_valid_test_template.json';
-
-     t.ec2Instance('TestInstance')
-        .imageId('ami-123456')
-        .keyName('test-key')
-        .name('TestInstance');
+    var filePath = '/tmp/elasticache_test_template.json';
 
     t.elastiCacheCluster('TestECC')
         .autoMinorVersionUpgrade('true')
@@ -24,7 +19,7 @@ exports.testJustEC2 = function(test){
 
     t.save(filePath);
 
-    // Assertions
+    // Validate the template
     test.expect(2);
 
     function validationCallback(isValid, message){
