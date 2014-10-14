@@ -6,7 +6,7 @@
 var Template = require('../lib/Template.js');
 var Validator = require('../lib/Validator.js');
 
-exports.testJustEC2 = function(test){
+exports.testElasticache = function(test){
     // Create the template
     var t = new Template();
     var filePath = '/tmp/elasticache_test_template.json';
