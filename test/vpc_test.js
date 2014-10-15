@@ -15,9 +15,16 @@ exports.vpcTest = function(test){
     // Params
     t.strParam('CidrBlock', '10.0.0.0/16', 'The CIDR block you want the VPC to cover');
 
-    // VPC
+    // VPC + Gateway
+    var myGatewayId = 'TestInternetGateway';
+    t.internetGateway(myGatewayId);
+
     var myVpcId = 'TestVPC';
     t.vpc(myVpcId).cidrBlock( t.ref('CidrBlock') );
+
+    t.vpcGatewayAttachment(myVpcId + 'Attachment')
+        .vpcId( t.ref(myVpcId) )
+        .internetGatewayId( t.ref(myGatewayId) );
 
     // Subnet
     var mySubnetId = 'MySecretSubnet';

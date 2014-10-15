@@ -52,15 +52,23 @@ exports.ec2_ecc_elb_secuirty_test = function(test){
     t.numParam('RDPPort', 3389);
     t.numParam('WebServerPort', webServerPort);
 
-    // VPC
+    // VPC + Gateway
+    var myGatewayId = 'TestInternetGateway';
+    t.internetGateway(myGatewayId);
+
     var myVpcId = 'TestVPC';
     t.vpc(myVpcId).cidrBlock( t.ref('CidrBlock') );
+
+    t.vpcGatewayAttachment(myVpcId + 'Attachment')
+        .vpcId( t.ref(myVpcId) )
+        .internetGatewayId( t.ref(myGatewayId) );
 
     // Subnet
     var mySubnetId = 'MySecretSubnet';
     t.subnet(mySubnetId)
         .cidrBlock( t.ref('CidrBlock') )
         .vpcId( t.ref(myVpcId) );
+
  
     // Create EC2 Instances
     var instanceIds = [];
