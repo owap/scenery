@@ -4,12 +4,14 @@
  * Attempt to create a CloudFormation template that contains nothing but
  * some parameters
  **/
-exports.testTemplateOnlyParameters = function(test){
+var Template = require('../lib/Template.js');
+var Validator = require('../lib/Validator.js');
+var fs = require('fs');
 
+exports.testInvalidTemplateParamsOnly = function(test){
     // Create and save the template
-    var Template = require('../lib/Template.js');
     var t = new Template();
-    var filePath = '/tmp/test-template.json';
+    var filePath = '/tmp/invalid_test_template.json';
 
     var paramKey = 'TestParam',
         paramValue = 'This is a test',
@@ -19,9 +21,8 @@ exports.testTemplateOnlyParameters = function(test){
     t.save(filePath);
 
     // Read saved template
-    var fs = require('fs');
     var tLoaded = Template.parse(filePath);
-    test.expect(6);
+    test.expect(7);
 
     // Test that the template we load equals the one we created above
     test.deepEqual(tLoaded, t,
@@ -36,12 +37,13 @@ exports.testTemplateOnlyParameters = function(test){
     // Assert that this template is invalid because there are no Resources (only Parameters)
     function validationCallback(isValid, message){
         test.ok(!isValid);
+        test.ok(message.message.indexOf(
+            'At least one Resources member must be defined') > -1);
         test.done();
     }
 
     // Assert that no errors are thrown when invoking Validate
     test.doesNotThrow(function(){
-        var Validator = require('../lib/Validator.js');
         var v = new Validator(filePath);
         v.validate(validationCallback);
     });

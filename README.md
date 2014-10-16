@@ -2,6 +2,14 @@
 
 ## Setup
 + Run `npm install` in the root spatula directory
++ Add your AWS credentials to `config.json`:
+```
+{
+    "accessKeyId": "YOUR_ACCESS_KEY_ID",
+    "secretAccessKey": "YOUR_SECRET_ACCESS_KEY",
+    "region": "us-east-1"
+}
+```
 
 ## Developing
 + Running `grunt` in the directory will:
@@ -61,10 +69,12 @@ The following (invalid) template was passed to the validator:
 The Validator, when run with the sample code above, produced the following output:
 
 ```
-CloudFormation template is invalid because: { [ConfigError: Missing region in config]
-message: 'Missing region in config',
-code: 'ConfigError',
-time: Fri Oct 10 2014 15:28:45 GMT-0400 (EDT) }
+CloudFormation template is invalid because: { [ValidationError: Template format error: At least one Resources member must be defined.]
+message: 'Template format error: At least one Resources member must be defined.',
+code: 'ValidationError',
+time: Sat Oct 11 2014 08:57:50 GMT-0400 (EDT),
+statusCode: 400,
+retryable: false }
 ```
 
 As you can see, the output from the `aws-sdk` is passed through the
