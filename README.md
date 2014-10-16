@@ -2,7 +2,7 @@
 
 ## Setup
 + Run `npm install` in the root spatula directory
-+ Add your AWS credentials to `config.json`:
++ Add your AWS credentials to a file `config.json`:
 ```
 {
     "accessKeyId": "YOUR_ACCESS_KEY_ID",
@@ -24,6 +24,7 @@ TODO
 
 ## Validing CloudFormation Templates
 Assuming that your CloudFormation script is kept in a file `/tmp/MyCFTemplate.json`,
+and that your AWS credentials are kept in a file `/opt/aws_config.json`,
 the following block of code shows how the Validator class can be used to invoke
 the `aws-sdk` to validate your template.
 
@@ -37,9 +38,12 @@ function validationCallback(isValid, message){
     }
 }
 
-// Second, instantiate a Validator object, referencing your Template on the local filesystem
+// Second, instantiate a Validator object, passing in two arguments:
+//    - The path to your CloudFormation Template
+//    - The path to your AWS Config
+
 var Validator = require('./lib/Validator.js');
-var myValidator = Validator('/tmp/MyCFTemplate.json');
+var myValidator = Validator('/tmp/MyCFTemplate.json', '/opt/aws_config.json');
 
 // Finally, invoke the validator, passing the callback we defined above
 myValidator.validate(validationCallback);
