@@ -17,7 +17,44 @@
     - Run unit tests to make sure everything is passing correctly
 
 ## Building CloudFormation Templates
-TODO
+To build CloudFormation templates, require the Spatula library into your
+project, and use it to instantiate `Template` (and other) objects that will
+be compiled to CloudFormation Templates.
+
+```javascript
+var Spatula = require('spatula');
+var filePath = '/tmp/myCloudformationTemplate.json';
+
+console.log('Spatula', Spatula);
+var t = new Spatula.Template();
+
+// Create a single EC2 instance in the tempalte
+t.ec2Instance('TestInstance')
+        .keyName('test-key')
+        .imageId('ami-123456')
+        .name('TestInstance');
+
+// Output Cloudformation JSON
+t.save(filePath);
+
+// Validate Cloudformation JSON
+function validationCallback(isValid, message){
+    console.log('Is the template valid?', isValid, message);
+}
+var v = new Spatula.Validator(filePath, '/tmp/aws_config.json');
+v.validate(validationCallback);
+```
+
+Invoking this code produces the following output:
+```
+Is the template valid? true { ResponseMetadata: { RequestId: 'a01b355f-555b-11e4-adf9-67e05ea3699c' },
+  Parameters: [],
+  Description: '',
+  Capabilities: [] }
+```
+
+Examples of more complex CloudFormation templates can be found in the `tests/`
+folder.
 
 ## Modifying Existing Cloudformation Templates
 TODO
