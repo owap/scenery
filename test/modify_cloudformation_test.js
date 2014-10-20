@@ -23,23 +23,12 @@ var t = new Template();
 
 exports.createOriginalTemplate = function(test){
 
-    t.strParam('EC2InstanceType', 'c3.large', 'Type of EC2 Instance to launch')
-        .allowedValues([
-            'c3.large',
-            'c3.xlarge',
-            'c3.2xlarge',
-            'c3.4xlarge',
-            'c3.8xlarge'
-        ]);
+    // Create Parameters
+    t.strParam('CacheType', 'cache.m3.medium', 'Type of cache instance to add to the ElastiCache cluster');
+    t.strParam('EC2InstanceType', 'c3.large', 'Type of EC2 Instance to launch');
     t.strParam('EC2InstanceAMI', 'ami-6aff5e02', 'AMI Instance ID to use for the EC2 instances');
     t.strParam('KeyName', null, 'Name of the EC2 Keypair to enable SSH access to the boxes');
     t.strParam('OpenCidrIp', '0.0.0.0/0');
-
-    t.elastiCacheCluster('TestECC')
-        .autoMinorVersionUpgrade('true')
-        .cacheNodeType('cache.m3.medium')
-        .engine('memcached')
-        .numCacheNodes(1);
 
     var webServerPort = 80;
     t.numParam('RDPPort', 3389);
@@ -51,12 +40,12 @@ exports.createOriginalTemplate = function(test){
         instanceIds.push('loadBalacnedEc2Instance' + i);
     }
 
-   for(var j in instanceIds){
+    for(var j in instanceIds){
         t.ec2Instance(instanceIds[j])
             .keyName( t.ref('KeyName') )
             .imageId( t.ref('EC2InstanceAMI') )
-            .instanceType( t.ref('EC2InstanceType') );
-            //.securityGroups( t.ref('InstanceSecurityGroup') );
+            .instanceType( t.ref('EC2InstanceType') )
+            .securityGroups( t.ref('InstanceSecurityGroup') );
     }
 
     // Create the load balancer (for the ec2 instances)
@@ -76,6 +65,22 @@ exports.createOriginalTemplate = function(test){
           'InstancePort' : { 'Ref' : 'WebServerPort' },
           'Protocol' : 'HTTP'
         });
+
+    // Create Elasticache Cluster
+    var eccName = 'TestECC';
+    t.elastiCacheCluster(eccName)
+        .autoMinorVersionUpgrade('true')
+        .cacheNodeType( t.ref('CacheType') )
+        .clusterName(eccName)
+        .engine('memcached')
+        .numCacheNodes(1)
+        .vpcSecurityGroupIds( t.fnGetAtt('CacheSecurityGroup', 'GroupId') );
+
+    // Create Security Groups
+    t.securityGroup('InstanceSecurityGroup', 'Security Group for the EC2 Instances')
+        .tcpIn({ 'CidrIp': t.ref('OpenCidrIp')}, t.ref('WebServerPort'), t.ref('RDPPort'));
+    t.securityGroup('CacheSecurityGroup', 'Security Group for the ElastiCache Cluster')
+        .tcpIn({'SourceSecurityGroupName': t.ref('InstanceSecurityGroup')}, 11211);
 
     t.save(filePath);
 
