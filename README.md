@@ -3,7 +3,7 @@
 ## Setup
 + Run `npm install` in the root spatula directory
 + Add your AWS credentials to a file `config.json`:
-```
+```json
 {
     "accessKeyId": "YOUR_ACCESS_KEY_ID",
     "secretAccessKey": "YOUR_SECRET_ACCESS_KEY",
@@ -98,7 +98,7 @@ t.ec2Instance('TestInstance')
 t.save(filePath);
 ```
 This yields the following template:
-```
+```json
 {
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "",
@@ -136,16 +136,12 @@ var ec2Instances = modifiedTemplate.getResourcesByType('AWS::EC2::Instance');
 // The ec2Instances var is an array of Spatula Instance objects
 
 var modifiedInstance = ec2Instances[0];
-modifiedInstance.imageId('ami-654321');
-modifiedInstance.instanceType('t1.micro');
+modifiedInstance.imageId('ami-654321');         // Modify the ImageId
+modifiedInstance.instanceType('t1.micro');      // Add an InstanceType
 modifiedTemplate.save('/tmp/modifiedTemplate.json');
 ```
-The JSON for the modified template is identical to the template above, with the
-exception of:
-    + `ImageId` on the resource has been changed from `ami-123456` to `ami-654321`
-    + We have appended an `InstanceType` to the resource
-
-```
+... which yeilds the following CF Template:
+```json
 {
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "",
