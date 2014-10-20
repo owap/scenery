@@ -100,9 +100,18 @@ exports.createOriginalTemplate = function(test){
     v.validate(validationCallback);
 };
 
-exports.testTemplateModification = function(test){
+exports.testLoadedTemplate = function(test){
     test.expect(1);
     var newTemplate = Template.parse(filePath);
     test.deepEqual(newTemplate, t);
+    test.done();
+};
+
+exports.testGetResourcesByType = function(test){
+    test.expect(2);
+    var newTemplate = Template.parse(filePath);
+    var ec2Instances = newTemplate.getResourcesByType('AWS::EC2::Instance');
+    test.ok(!!ec2Instances);
+    test.ok(2 === ec2Instances.length);
     test.done();
 };
