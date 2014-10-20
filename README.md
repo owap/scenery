@@ -56,7 +56,131 @@ Examples of more complex CloudFormation templates can be found in the `tests/`
 folder.
 
 ## Modifying Existing Cloudformation Templates
+To load an existing CloudFormation template from JSON into Spatula objects,
+invoke the `Template.parse()` function. For example:
+
+```javascript
+var myTemplate = Template.parse('/path/to/your/cf/template.JSON');
+```
+
+Once you've loaded objects into memory, you can reference them by their AWS
+type using the template object's `getResourcesByType` function:
+
+```javascript
+var myTemplate = Template.parse('/path/to/your/cf/template.JSON');
+var ec2Instances = myTemplate.getResourcesByType('AWS::EC2::Instance');
+
+// The ec2Instances var is an array of Spatula Instance objects
+var firstEc2Instance = ec2Instances[0];
+```
+
+Now that you have access to individual resources, you can modify them with
+standard Spatula functions. Save the template again to see the difference!
+
+### Example Workflow
+Below is an example workflow that highlights Spatula's ability to modify
+Cloudformation templates.
+
+#### Create a CloudFormation Template in Javascript
+```javascript
+var Spatula = require('spatula');
+var filePath = '/tmp/myCloudformationTemplate.json';
+
+var t = new Spatula.Template();
+
+// Create a single EC2 instance in the tempalte
+t.ec2Instance('TestInstance')
+        .keyName('test-key')
+        .imageId('ami-123456')
+        .name('TestInstance');
+
+// Output Cloudformation JSON
+t.save(filePath);
+```
+This yields the following template:
+```
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "",
+    "Parameters": {},
+    "Mappings": {},
+    "Conditions": {},
+    "Resources": {
+        "TestInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "TestInstance",
+                        "PropagateAtLaunch": "true"
+                    }
+                ],
+                "GroupDescription": "",
+                "KeyName": "test-key",
+                "ImageId": "ami-123456"
+            }
+        }
+    },
+    "Outputs": {}
+}
+```
+#### Modifying Existing Cloudformation Template
+Now we're going to load and modify a resource in the Template we just created:
+
+```javascript
+var filePath = '/tmp/myCloudformationTemplate.json';
+var modifiedTemplate = Template.parse(filePath);
+var ec2Instances = modifiedTemplate.getResourcesByType('AWS::EC2::Instance');
+
+// The ec2Instances var is an array of Spatula Instance objects
+
+var modifiedInstance = ec2Instances[0];
+modifiedInstance.imageId('ami-654321');
+modifiedInstance.instanceType('t1.micro');
+modifiedTemplate.save('/tmp/modifiedTemplate.json');
+```
+The JSON for the modified template is identical to the template above, with the
+exception of:
+    + `ImageId` on the resource has been changed from `ami-123456` to `ami-654321`
+    + We have appended an `InstanceType` to the resource
+
+```
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "",
+    "Parameters": {},
+    "Mappings": {},
+    "Conditions": {},
+    "Resources": {
+        "TestInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "TestInstance",
+                        "PropagateAtLaunch": "true"
+                    }
+                ],
+                "GroupDescription": "",
+                "KeyName": "test-key",
+                "ImageId": "ami-654321",
+                "InstanceType": "t1.micro"
+            }
+        }
+    },
+    "Outputs": {}
+}
+```
+
+#### Deleting Cloudformation Template Resources
+We can also remove resources from templates. We'll begin by loading the previous
+template:
+```
 TODO
+```
+
 
 ## Validing CloudFormation Templates
 Assuming that your CloudFormation script is kept in a file `/tmp/MyCFTemplate.json`,
