@@ -25,7 +25,6 @@ be compiled to CloudFormation Templates.
 var Spatula = require('spatula');
 var filePath = '/tmp/myCloudformationTemplate.json';
 
-console.log('Spatula', Spatula);
 var t = new Spatula.Template();
 
 // Create a single EC2 instance in the tempalte
