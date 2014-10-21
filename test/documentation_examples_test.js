@@ -54,6 +54,29 @@ exports.deleteMachine = function(test){
     modifiedTemplate.removeResourceByKey(key);
     modifiedTemplate.save('/tmp/modifiedTemplate2.json');
 
+    test.expect(0);
+    test.done();
+};
+
+exports.deleteParams = function(test){
+    var Spatula = require('../spatula.js');
+    var Template = Spatula.Template;
+    var filePath = '/tmp/paramTest.json';
+
+    var it = new Template();
+    var paramKey = 'TestParam',
+        paramValue = 'Test Value ';
+
+    // Add three params to the template
+    for(var i=0; i<3; i++){
+        it.strParam(paramKey+i, paramValue+i);
+    }
+    it.save(filePath);
+
+    var t = Template.parse(filePath);
+    t.removeParameterByKey('TestParam0');
+    t.removeParameterByKey('TestParam2');
+    t.save('/tmp/fewerParams.json');
 
     test.expect(0);
     test.done();
