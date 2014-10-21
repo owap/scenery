@@ -1,0 +1,113 @@
+{
+    "AWSTemplateFormatVersion":"2010-09-09",
+    "Description":"Schwerpunkt Twitter Ingest",
+    "Parameters":{
+        "VpcId":{
+            "Description":"Id of the VPC to run your instance",
+            "Type":"String",
+            "Default":"vpc-69e0550c"
+        },
+        "subnetId1":{
+            "Description":"Id of the subnet for your instance",
+            "Type":"String",
+            "Default":"subnet-4f6fa538"
+        },
+        "amiID":{
+            "Description":"Id of the ami for the host machine",
+            "Type":"String",
+            "Default":"ami-7c807d14"
+        },
+        "VPCSecurityGroupIds":{
+            "Description":"Existing Security Group IDs to assign to the instance",
+            "Type":"String",
+            "Default":"sg-b0207dd5"
+        },
+        "KeyName":{
+            "Description":"Name of the Key for connection",
+            "Type":"String",
+            "Default":"OpenWhereRoot"
+        },
+        "InstanceName":{
+            "Description":"Description of the server for tag",
+            "Type":"String",
+            "Default":"Java Docker Server"
+        },
+        "DockerLoginPassword":{
+            "Description":"Password for docker registry user",
+            "Type":"String"
+        },
+        "MongoHostIP":{
+            "Description":"IP Address for TweetCollector to connect to",
+            "Type":"String",
+            "Default" : "10.10.1.88"
+        },
+        "InstanceType":{
+            "Description":"Default type of EC2 instance to launch.",
+            "Type":"String",
+            "Default":"m1.medium",
+            "AllowedValues":[
+                "t2.micro",
+                "t2.small",
+                "t2.medium",
+                "m1.small",
+                "m1.medium",
+                "m1.large",
+                "m1.xlarge",
+                "m2.xlarge",
+                "m2.2xlarge",
+                "m2.4xlarge",
+                "m3.medium",
+                "m3.large",
+                "m3.xlarge",
+                "m3.2xlarge",
+                "c1.xlarge",
+                "cc2.8xlarge",
+                "cg1.4xlarge",
+                "cr1.8xlarge",
+                "hi1.4xlarge",
+                "hs1.8xlarge"
+            ],
+            "ConstraintDescription":"must be a valid EC2 instance type."
+        }
+    },
+    "Mappings":{
+
+    },
+    "Resources":{
+        "JavaDockerInstance" : {
+          "Type" : "AWS::EC2::Instance",
+          "Properties" : {
+              "InstanceType" : { "Ref" : "InstanceType" },
+              "KeyName" : { "Ref" : "KeyName" },
+              "SubnetId" : { "Ref" : "subnetId1" },
+              "SourceDestCheck" : "false",
+              "SecurityGroupIds" : [ { "Ref" : "VPCSecurityGroupIds" } ],
+              "ImageId" : {"Ref":"amiID"},
+              "UserData" : {
+                  "Fn::Base64" : { 
+                      "Fn::Join" : [ "", [
+                          "#!/bin/bash -e\n",
+                          "yum -y update \n",
+                          "yum clean all \n",
+                          "MY_IP=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
+                          "yum install -y docker-io \n",
+                          "service docker start \n",
+                          "chkconfig docker on \n",
+                          "docker login -u openwhere -p ",{ "Ref" : "DockerLoginPassword" }," -e devops@openwhere.com\n",
+                          "docker pull openwhere/tweet-collector\n",
+                          "docker run -i -t -d -e mongoHost=",{ "Ref" : "MongoHostIP" }," openwhere/tweet-collector\n"     
+                      ] ]
+                  }
+              },
+              "Tags": [
+                  {
+                    "Key": "Name", "Value": { "Ref" : "InstanceName" }
+                  },
+                  {
+                    "Key":"Purpose", "Value":"java server"
+                  }
+              ]
+          }
+        }
+    }
+}
