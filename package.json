@@ -2,7 +2,7 @@
   "name": "spatula",
   "version": "0.0.0",
   "description": "Flip your AWS Stacks into existance with Spatula: The CloudFormation Javascript Library.",
-  "main": "index.js",
+  "main": "spatula.js",
   "scripts": {
     "test": "grunt nodeunit"
   },
