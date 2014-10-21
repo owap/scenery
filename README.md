@@ -140,7 +140,7 @@ modifiedInstance.imageId('ami-654321');         // Modify the ImageId
 modifiedInstance.instanceType('t1.micro');      // Add an InstanceType
 modifiedTemplate.save('/tmp/modifiedTemplate.json');
 ```
-... which yeilds the following CF Template:
+... which yields the following CF Template:
 ```json
 {
     "AWSTemplateFormatVersion": "2010-09-09",
@@ -173,10 +173,32 @@ modifiedTemplate.save('/tmp/modifiedTemplate.json');
 #### Deleting Cloudformation Template Resources
 We can also remove resources from templates. We'll begin by loading the previous
 template:
-```
-TODO
+```javascript
+var modifiedTemplate = Template.parse('/tmp/modifiedTemplate.json');
+var ec2Instances = modifiedTemplate.getResourcesByType('AWS::EC2::Instance');
+
+// Remove the ec2 instance
+var key = ec2Instances[0].id;               // Get the ID of the instance to remove
+modifiedTemplate.removeResourceByKey(key);
+modifiedTemplate.save('/tmp/emptyTemplate.json');
 ```
 
+If you open the `emptyTemplate.json` file that we just saved to disk, you will
+see that our only resource (from the previous examples) is no longer present:
+```json
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "",
+    "Parameters": {},
+    "Mappings": {},
+    "Conditions": {},
+    "Resources": {},
+    "Outputs": {}
+}
+```
+
+#### Deleting Cloudformation Template Parameters
+TODO
 
 ## Validing CloudFormation Templates
 Assuming that your CloudFormation script is kept in a file `/tmp/MyCFTemplate.json`,
