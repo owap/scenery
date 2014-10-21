@@ -1,0 +1,1102 @@
+{"AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Creates a management VPC with DMZ and Backend subnets.  Creates VPN and NAT server in DMZ, LDAP in backend subnet",
+  "Parameters": {
+    "NetworkName": {
+      "Description": "Should be a unique name of the VPC",
+      "Default": "mgmt",
+      "Type": "String"
+    },
+    "VpcNetworkPrefix": {
+      "Description": "First two octets of the IP address space",
+      "Type": "String",
+      "MinLength": "5",
+      "MaxLength": "5",
+      "Default": "10.10",
+      "ConstraintDescription": "must be a valid first two octets ie 10.22"
+    },
+    "publicSubnetPrefix":{
+        "Description":"Address of your subnet",
+        "Type":"String",
+        "Default":"10.10.2.0"
+    },
+    "privateSubnetPrefix":{
+        "Description":"Address of your subnet",
+        "Type":"String",
+        "Default":"10.10.1.0"
+    },
+    "InstanceTenancy": {
+      "Description": "The allowed tenancy of instances launched into the VPC",
+      "Type": "String",
+      "Default": "default",
+      "AllowedValues": [
+        "default",
+        "dedicated"
+      ]
+    },
+    "VpcAvailabilityZone": {
+      "Description": "One of two Availability Zones that will be used to create subnets.",
+      "Type": "String",
+      "Default": "us-east-1b",
+      "MinLength": "1",
+      "MaxLength": "255"
+    },
+    "NatInstanceType": {
+      "Description": "NAT Device EC2 instance type",
+      "Type": "String",
+      "Default": "m1.small",
+      "AllowedValues": [
+        "t1.micro",
+        "m1.small",
+        "m1.medium",
+        "m1.large",
+        "m1.xlarge",
+        "m2.xlarge",
+        "m2.2xlarge",
+        "m2.4xlarge",
+        "m3.medium",
+        "m3.xlarge",
+        "m3.2xlarge",
+        "c1.medium",
+        "c1.xlarge"
+      ],
+      "ConstraintDescription": "must be a valid EC2 instance type."
+    },
+    "VpnInstanceType": {
+      "Description": "VPN Device EC2 instance type",
+      "Type": "String",
+      "Default": "m3.medium",
+      "AllowedValues": [
+        "t1.micro",
+        "m1.small",
+        "m1.medium",
+        "m1.large",
+        "m1.xlarge",
+        "m2.xlarge",
+        "m2.2xlarge",
+        "m2.4xlarge",
+        "m3.medium",
+        "m3.xlarge",
+        "m3.2xlarge",
+        "c1.medium",
+        "c1.xlarge"
+      ],
+      "ConstraintDescription": "must be a valid EC2 instance type."
+    },
+    "LdapInstanceType": {
+      "Description": "Ldap EC2 instance type",
+      "Type": "String",
+      "Default": "m1.small",
+      "AllowedValues": [
+        "t1.micro",
+        "m1.small",
+        "m1.medium",
+        "m1.large",
+        "m1.xlarge",
+        "m2.xlarge",
+        "m2.2xlarge",
+        "m2.4xlarge",
+        "m3.medium",
+        "m3.xlarge",
+        "m3.2xlarge",
+        "c1.medium",
+        "c1.xlarge"
+      ],
+      "ConstraintDescription": "must be a valid EC2 instance type."
+    },
+    "NatKeyName": {
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the NAT instances",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "Default": "OpenWhereRoot",
+      "AllowedPattern": "[-_ a-zA-Z0-9]*",
+      "ConstraintDescription": "can contain only alphanumeric characters, spaces, dashes and underscores."
+    },
+    "LdapAdminPassword": {
+      "Description": "Password for LDAP Admininstrator (cn=admin)",
+      "Default": "4testuse",
+      "Type": "String"
+    },
+    "VpnUserPassword": {
+      "Description": "Password for VpnUser (cn=vpnuser,ou=Users)",
+      "MinLength": "8",
+      "Type": "String"
+    },
+    "LdapBaseDN": {
+      "Description": "Base Distinguished Name for LDAP directory (Must match domain name)",
+      "Default": "dc=mgmt,dc=openwhere,dc=com",
+      "Type": "String"
+    },
+    "LdapBaseDomain": {
+      "Description": "Base Domain for LDAP directory (Must match DN)",
+      "Default": "mgmt.openwhere.com",
+      "Type": "String"
+    },
+    "DevOpsBucket":{
+        "Description":"Bucket containing resources for cloud init",
+        "Type":"String",
+        "Default":"devops.openwhere.com"
+    },
+    "VpnPkcsPassword": {
+      "Description": "Password to unlock the cert and key from the .pfx file",
+      "MinLength": "8",
+      "Type": "String"
+    },
+    "VpnPkcsLocation": {
+      "Description": "Location of the .pfx file in the DevOpsBucket",
+      "Type": "String",
+      "Default":"/keys/openwherevpn.pfx"
+    },
+    "HostedZoneId":{
+        "Description":"Id of the hosted zone for route 53 records",
+        "Type":"String",
+        "Default":"Z358LNG0XOCW3B"
+    },
+    "VpnDNSName":{
+        "Description":"Id of the hosted zone for route 53 records",
+        "Type":"String",
+        "Default":"vpn.mgmt.openwheredemo.com"
+    },
+    "LdapDNSName":{
+        "Description":"Id of the hosted zone for route 53 records",
+        "Type":"String",
+        "Default":"ldap.mgmt.openwheredemo.com"
+    }
+  },
+  "Mappings": {
+    "AwsNatAmi": {
+      "us-east-1": {
+        "AMI": "ami-c6699baf"
+      },
+      "us-west-2": {
+        "AMI": "ami-f032acc0"
+      },
+      "us-west-1": {
+        "AMI": "ami-3bcc9e7e"
+      },
+      "eu-west-1": {
+        "AMI": "ami-0b5b6c7f"
+      },
+      "ap-southeast-1": {
+        "AMI": "ami-02eb9350"
+      },
+      "ap-southeast-2": {
+        "AMI": "ami-ab990e91"
+      },
+      "ap-northeast-1": {
+        "AMI": "ami-14d86d15"
+      },
+      "sa-east-1": {
+        "AMI": "ami-0439e619"
+      }
+    },
+    "OpenVPNImageMap" : {
+      "us-east-1" : { "AMI" : "ami-f8ac7c90" }
+    },
+    "AwsBaseAmi" : {
+      "us-east-1" : { "AMI" : "ami-7c807d14" },
+      "us-west-2": { "AMI": "ami-1b3b462b" },
+      "us-west-1": { "AMI": "ami-a8d3d4ed" },
+      "eu-west-1": { "AMI": "ami-672ce210"  }
+    }
+  },
+  "Resources": {
+    "VPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": {
+          "Fn::Join": [
+            ".",
+            [
+              {
+                "Ref": "VpcNetworkPrefix"
+              },
+              "0.0/16"
+            ]
+          ]
+        },
+        "EnableDnsSupport": "true",
+        "EnableDnsHostnames": "false",
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "NetworkName"
+            }
+          }
+        ]
+      }
+    },
+    "DmzSubnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::Join": ["/",[{"Ref": "publicSubnetPrefix"},"24"]]
+        },
+        "AvailabilityZone": {
+          "Ref": "VpcAvailabilityZone"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "DmzSubnet"
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "NetworkName"
+            }
+          }
+        ]
+      }
+    },
+    "BackendSubnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::Join": ["/",[{"Ref": "privateSubnetPrefix"},"24"]]
+        },
+        "AvailabilityZone": {
+          "Ref": "VpcAvailabilityZone"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "BackendSubnet"
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "NetworkName"
+            }
+          }
+        ]
+      }
+    },
+    "InternetGateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "VpcName",
+            "Value": {
+              "Ref": "NetworkName"
+            }
+          }
+        ]
+      }
+    },
+    "GatewayToInternet": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "InternetGatewayId": {
+          "Ref": "InternetGateway"
+        }
+      }
+    },
+    "PublicRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "NetworkName"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": "PublicRouteTable"
+          }
+        ]
+      }
+    },
+    "PublicRoute": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": "GatewayToInternet",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "InternetGateway"
+        }
+      }
+    },
+    "PublicRouteTableAssociationDmzSubnet": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DmzSubnet"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "PublicNetworkAcl": {
+      "Type": "AWS::EC2::NetworkAcl",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "VpcName",
+            "Value": {
+              "Ref": "NetworkName"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": "PublicNetworkAcl"
+          }
+        ]
+      }
+    },
+    "InboundAllowAllNetworkAclEntry": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "PublicNetworkAcl"
+        },
+        "RuleNumber": "100",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "Egress": "false",
+        "CidrBlock": "0.0.0.0/0"
+      }
+    },
+    "OutboundAllowAllPublicNetworkAclEntry": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "PublicNetworkAcl"
+        },
+        "RuleNumber": "100",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "Egress": "true",
+        "CidrBlock": "0.0.0.0/0"
+      }
+    },
+    "PublicNetworkAclAssociationDmzSubnet": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DmzSubnet"
+        },
+        "NetworkAclId": {
+          "Ref": "PublicNetworkAcl"
+        }
+      }
+    },
+    "PrivateRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "NetworkName"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": "PrivateRouteTable"
+          }
+        ]
+      }
+    },
+    "PrivateRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PrivateRouteTable"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "InstanceId": {
+          "Ref": "NatDevice"
+        }
+      }
+    },
+    "PrivateRouteTableAssociationBackendSubnet": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "BackendSubnet"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTable"
+        }
+      }
+    },
+    "PrivateNetworkAcl": {
+      "Type": "AWS::EC2::NetworkAcl",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "VpcName",
+            "Value": {
+              "Ref": "NetworkName"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": "PrivateNetworkAcl"
+          }
+        ]
+      }
+    },
+    "InboundPrivateNetworkAclEntry": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "PrivateNetworkAcl"
+        },
+        "RuleNumber": "100",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "Egress": "false",
+        "CidrBlock": "0.0.0.0/0"
+      }
+    },
+    "OutBoundPrivateNetworkAclEntry": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "PrivateNetworkAcl"
+        },
+        "RuleNumber": "100",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "Egress": "true",
+        "CidrBlock": "0.0.0.0/0"
+      }
+    },
+    "PrivateSubnetNetworkAclAssociationBackendSubnet": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "BackendSubnet"
+        },
+        "NetworkAclId": {
+          "Ref": "PrivateNetworkAcl"
+        }
+      }
+    },
+    "NatRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "NAT_Takeover",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:DescribeInstances",
+                    "ec2:DescribeRouteTables",
+                    "ec2:CreateRoute",
+                    "ec2:ReplaceRoute",
+                    "ec2:StartInstances",
+                    "ec2:StopInstances"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "NatRoleProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "NatRole"
+          }
+        ]
+      }
+    },
+    "VpnRole":{
+        "Type":"AWS::IAM::Role",
+        "Properties":{
+            "AssumeRolePolicyDocument":{
+                "Statement":[
+                    {
+                        "Effect":"Allow",
+                        "Principal":{
+                            "Service":[
+                                "ec2.amazonaws.com"
+                            ]
+                        },
+                        "Action":[
+                            "sts:AssumeRole"
+                        ]
+                    }
+                ]
+            },
+            "Path":"/",
+            "Policies":[
+                {
+                    "PolicyName":"s3-devops",
+                    "PolicyDocument":{
+                        "Statement":[
+                            {
+                                "Effect":"Allow",
+                                "Action":[
+                                    "s3:ListBucket",
+                                    "s3:GetObject"
+                                ],
+                                "Resource":[
+                                    {
+                                        "Fn::Join":[
+                                            "",
+                                            [
+                                                "arn:aws:s3:::",
+
+                                                {
+                                                    "Ref":"DevOpsBucket"
+                                                },
+                                                "*"
+                                            ]
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    "PolicyName":"cloudwatch-basic",
+                    "PolicyDocument":{
+                        "Version":"2012-10-17",
+                        "Statement":[
+                            {
+                                "Sid":"Stmt1395950054000",
+                                "Effect":"Allow",
+                                "Action":[
+                                    "cloudwatch:EnableAlarmActions",
+                                    "cloudwatch:PutMetricData",
+                                    "cloudwatch:PutMetricAlarm"
+                                ],
+                                "Resource":[
+                                    "*"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    },
+    "VpnRoleProfile":{
+        "Type":"AWS::IAM::InstanceProfile",
+        "Properties":{
+            "Path":"/",
+            "Roles":[
+                {
+                    "Ref":"VpnRole"
+                }
+            ]
+        }
+    },
+    "NATSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable internal access to the NAT device",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "-1",
+            "FromPort": "0",
+            "ToPort": "65535",
+            "CidrIp": {
+              "Fn::Join": [
+                ".",
+                [
+                  {
+                    "Ref": "VpcNetworkPrefix"
+                  },
+                  "0.0/16"
+                ]
+              ]
+            }
+          }
+        ],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "-1",
+            "FromPort": "0",
+            "ToPort": "65535",
+            "CidrIp": {
+              "Fn::Join": [
+                ".",
+                [
+                  {
+                    "Ref": "VpcNetworkPrefix"
+                  },
+                  "0.0/16"
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "OpenVPNSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+          "VpcId" : { "Ref" : "VPC" },
+          "GroupDescription" : "Enable internal access to the NAT device",
+          "SecurityGroupIngress" : [
+              { 
+                  "IpProtocol" : "-1",
+                  "CidrIp": {
+                      "Fn::Join": [
+                        ".",
+                        [
+                          {
+                            "Ref": "VpcNetworkPrefix"
+                          },
+                          "0.0/16"
+                        ]
+                      ]
+                    }
+              },
+              { 
+                  "IpProtocol" : "icmp",
+                  "FromPort" : "-1",
+                  "ToPort" : "-1",
+                  "CidrIp" : "0.0.0.0/0"
+              },
+              { 
+                  "IpProtocol" : "udp",
+                  "FromPort" : "1194",
+                  "ToPort" : "1194",
+                  "CidrIp" : "0.0.0.0/0"
+              },
+              { 
+                  "IpProtocol" : "tcp",
+                  "FromPort" : "22",
+                  "ToPort" : "22",
+                  "CidrIp" : "0.0.0.0/0"
+              },
+              { 
+                  "IpProtocol" : "tcp",
+                  "FromPort" : "80",
+                  "ToPort" : "80",
+                  "CidrIp" : "0.0.0.0/0"
+              },
+              { 
+                  "IpProtocol" : "tcp",
+                  "FromPort" : "443",
+                  "ToPort" : "443",
+                  "CidrIp" : "0.0.0.0/0"
+              }
+          ]
+      }
+    },
+    "OpenLdapSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable internal access to the NAT device",
+        "VpcId": { "Ref": "VPC" },
+        "SecurityGroupIngress" : [
+           { "IpProtocol" : "tcp", "FromPort" : "22",  "ToPort" : "22",  "SourceSecurityGroupId" : { "Ref" : "OpenVPNSecurityGroup" }} ,
+           { "IpProtocol" : "tcp", "FromPort" : "389",  "ToPort" : "389",  "SourceSecurityGroupId" : { "Ref" : "OpenVPNSecurityGroup" }} ,
+           { "IpProtocol" : "tcp", "FromPort" : "636",  "ToPort" : "636",  "SourceSecurityGroupId" : { "Ref" : "OpenVPNSecurityGroup" }} ,
+           { "IpProtocol" : "tcp", "FromPort" : "80",  "ToPort" : "80",  "SourceSecurityGroupId" : { "Ref" : "OpenVPNSecurityGroup" }} ,
+           { "IpProtocol" : "tcp", "FromPort" : "443", "ToPort" : "443", "SourceSecurityGroupId" : { "Ref" : "OpenVPNSecurityGroup" } } 
+        ]
+      }
+    },
+    "NATIPAddress": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc",
+        "InstanceId": {
+          "Ref": "NatDevice"
+        }
+      }
+    },
+    "NatDevice": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "InstanceType": {
+          "Ref": "NatInstanceType"
+        },
+        "IamInstanceProfile": {
+          "Ref": "NatRoleProfile"
+        },
+        "KeyName": {
+          "Ref": "NatKeyName"
+        },
+        "SubnetId": {
+          "Ref": "DmzSubnet"
+        },
+        "SourceDestCheck": "false",
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AwsNatAmi",
+            {
+              "Ref": "AWS::Region"
+            },
+            "AMI"
+          ]
+        },
+        "SecurityGroupIds": [
+          {
+            "Ref": "NATSecurityGroup"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "nat-01"
+          },
+          {
+            "Key": "CostCenter",
+            "Value": {
+              "Ref": "NetworkName"
+            }
+          }
+        ]
+      }
+    },
+
+    "OpenVPNInstance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+          "InstanceType" : { "Ref" : "VpnInstanceType" },
+          "IamInstanceProfile": { "Ref": "VpnRoleProfile"},
+          "KeyName" : { "Ref" : "NatKeyName" },
+          "SubnetId" : { "Ref" : "DmzSubnet" },
+          "SourceDestCheck" : "false",
+          "SecurityGroupIds" : [ { "Ref" : "OpenVPNSecurityGroup" } ],
+          "ImageId" : { 
+              "Fn::FindInMap": [ "AwsBaseAmi", { "Ref": "AWS::Region" }, "AMI" ]
+          },
+          "PrivateIpAddress": {
+            "Fn::Join": [".",[ { "Ref": "VpcNetworkPrefix"},"2.254"]]
+          },
+          "UserData" : {
+            "Fn::Base64" : {
+                "Fn::Join" : [ "", [
+                    "#!/bin/bash -e\n",
+                    "yum -y update \n",
+                    "yum clean all \n",
+                    "MY_IP=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
+                    "yum -y install wget gcc make rpm-build autoconf.noarch zlib-devel pam-devel openssl-devel git openvpn wget lzo1 openvpn-auth-ldap \n",
+                    "mkdir -p /etc/openvpn/easy-rsa/2.0 \n",
+                    "git clone https://github.com/OpenVPN/easy-rsa.git -b release/2.x /easy-rsa \n",
+                    "cp -r /easy-rsa/easy-rsa/2.0/* /etc/openvpn/easy-rsa/2.0/ \n",
+                    "sed -i 's,export KEY_CONFIG=.*,export KEY_CONFIG=/etc/openvpn/easy-rsa/2.0/openssl-1.0.0.cnf,g' /etc/openvpn/easy-rsa/2.0/vars \n",
+                    "cd /etc/openvpn/easy-rsa/2.0 \n",
+                    "chmod 755 /etc/openvpn/easy-rsa/2.0/* \n",
+                    "source /etc/openvpn/easy-rsa/2.0/vars \n",
+                    "/etc/openvpn/easy-rsa/2.0/clean-all \n",
+                    "aws s3 cp s3://",{ "Ref" : "DevOpsBucket" },{ "Ref" : "VpnPkcsLocation" }," /etc/openvpn/easy-rsa/2.0/keys/ \n",
+                    "openssl pkcs12 -in keys/openwherevpn.pfx  -nocerts -out keys/ca.key -passin pass:",{ "Ref" : "VpnPkcsPassword" }," -passout pass:",{ "Ref" : "VpnPkcsPassword" },"\n",
+                    "openssl rsa -in keys/ca.key -out keys/ca.key -passin pass:",{ "Ref" : "VpnPkcsPassword" },"\n",
+                    "openssl pkcs12 -in keys/openwherevpn.pfx -nokeys -out keys/ca.crt -passin pass:",{ "Ref" : "VpnPkcsPassword" },"\n",
+                    "/etc/openvpn/easy-rsa/2.0/build-key-server --batch server \n",
+                    "/etc/openvpn/easy-rsa/2.0/build-dh \n",
+                    "sed -i 's/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/g' /etc/sysctl.conf \n",
+                    "useradd vpnuser -s /bin/false \n",
+                    "echo \"",{ "Ref" : "VpnUserPassword" },"\" | passwd --stdin vpnuser \n",
+                    "cat>/etc/openvpn/server.conf<<EOL \n",
+                      "port 1194 #- port\n",
+                      "proto udp #- protocol\n",
+                      "dev tun\n",
+                      "tun-mtu 1500\n",
+                      "tun-mtu-extra 32\n",
+                      "mssfix 1450\n",
+                      "reneg-sec 0\n",
+                      "ca /etc/openvpn/easy-rsa/2.0/keys/ca.crt\n",
+                      "cert /etc/openvpn/easy-rsa/2.0/keys/server.crt\n",
+                      "key /etc/openvpn/easy-rsa/2.0/keys/server.key\n",
+                      "dh /etc/openvpn/easy-rsa/2.0/keys/dh2048.pem\n",
+                      "#plugin /usr/lib64/openvpn/plugin/lib/openvpn-auth-pam.so /etc/pam.d/login #- Comment this line if you are using FreeRADIUS\n",
+                      "#plugin /etc/openvpn/radiusplugin.so /etc/openvpn/radiusplugin.cnf #- Uncomment this line if you are using FreeRADIUS\n",
+                      "plugin /usr/lib64/openvpn/plugin/lib/openvpn-auth-ldap.so /etc/openvpn/auth/ldap.conf #- ldap auth\n",
+                      "client-cert-not-required\n",
+                      "username-as-common-name\n",
+                      "server 10.8.0.0  255.255.255.0\n",
+                      "#push \"redirect-gateway def1\" \n",
+                      "push \"dhcp-option DNS 8.8.8.8\" \n",
+                      "push \"dhcp-option DNS 8.8.4.4\" \n",
+                      "keepalive 5 30 \n",
+                      "comp-lzo \n",
+                      "persist-key\n",
+                      "persist-tun\n",
+                      "status /var/log/openvpn.log\n",
+                      "verb 3\n",
+                      "push \"route $MY_IP 255.255.255.0\" \n",
+                    "EOL\n",       
+                    "cat>/etc/openvpn/auth/ldap.conf<<EOL \n",
+                      "<LDAP>\n",
+                      "  URL   ldap://",{"Fn::GetAtt" : [ "OpenLDAPInstance" , "PrivateIp" ]},"\n",
+                      "  Timeout   15\n",
+                      "  TLSEnable no\n",
+                      "  FollowReferrals yes\n",
+                      "  TLSCACertFile /usr/local/etc/ssl/ca.pem\n",
+                      "  TLSCACertDir  /etc/ssl/certs\n",
+                      "</LDAP>\n",
+                      "<Authorization>\n",
+                      "  BaseDN    \"ou=Users,dc=mgmt,dc=openwhere,dc=com\"\n",
+                      "  SearchFilter  \"(&(cn=%u))\" \n",
+                      "  RequireGroup  false\n",
+                      "  <Group>\n",
+                      "          BaseDN          \"ou=Groups,dc=mgmt,dc=openwhere,dc=com\"\n",
+                      "          SearchFilter    \"(|(cn=developers)(cn=artists))\"\n",
+                      "          MemberAttribute uniqueMember\n",
+                      "  </Group>\n",
+                      "</Authorization>\n",
+                    "EOL\n",                    
+                    "iptables -F\n",
+                    "iptables -F -t nat\n",
+                    "iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT \n",
+                    "iptables -A FORWARD -s 10.8.0.0/24 -j ACCEPT\n",
+                    "iptables -A FORWARD -j REJECT\n",
+                    "iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE\n",
+                    "iptables -t nat -A POSTROUTING -j SNAT --to-source $MY_IP\n",
+                    "service iptables save\n",
+                    "service iptables restart \n",
+                    "echo 'push \"route ", { "Ref" : "privateSubnetPrefix" },"  255.255.255.0\"' >> /etc/openvpn/server.conf\n",
+                    "service openvpn start\n",
+                    "chkconfig openvpn on\n",                          
+                    "sysctl -p\n"                    
+                ] ]
+            }
+          },
+          "Tags": [
+          {
+            "Key": "Name",
+            "Value": "vpn-01"
+          },
+          {
+            "Key": "CostCenter",
+            "Value": {
+              "Ref": "NetworkName"
+            }
+          }
+        ]
+      },
+      "DependsOn" : ["NatDevice", "OpenLDAPInstance"]
+    },
+    "OpenVPNIPAddress" : {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc",
+        "InstanceId": {
+          "Ref": "OpenVPNInstance"
+        }
+      }
+    },
+    "OpenLDAPInstance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+          "InstanceType" : { "Ref" : "NatInstanceType" },
+          "IamInstanceProfile": { "Ref": "NatRoleProfile"},
+          "KeyName" : { "Ref" : "NatKeyName" },
+          "SubnetId" : { "Ref" : "DmzSubnet" },
+          "SourceDestCheck" : "false",
+          "SecurityGroupIds" : [ { "Ref" : "OpenLdapSecurityGroup" } ],
+          "ImageId": {
+            "Fn::FindInMap": [ "AwsBaseAmi", { "Ref": "AWS::Region" }, "AMI" ]
+          },
+          "UserData" : {
+              "Fn::Base64" : { 
+                  "Fn::Join" : [ "", [
+                      "#!/bin/bash -e\n",
+                      "\n yum -y install docker-io \n",
+                      "service docker start \n",
+                      "chkconfig docker on \n",
+                      "#!/bin/bash -e\n",
+                      "RANDOM_PASS=",{"Ref": "LdapAdminPassword"},"\n",
+                      "VPN_PASS=",{"Ref": "VpnUserPassword"},"\n",
+                      "BASE_DN=",{ "Ref": "LdapBaseDN"},"\n",
+                      "BASE_DOMAIN=",{ "Ref": "LdapBaseDomain"},"\n",                      
+                      "mkdir /root/openldap \n",
+                      "cat>/root/openldap/inithooks.conf<<EOF\n",
+                      "export ROOT_PASS=$RANDOM_PASS\n",
+                      "export HUB_APIKEY=SKIP\n",
+                      "export SEC_UPDATES=FORCE\n",
+                      "export APP_PROFILE=server\n",
+                      "export APP_EMAIL=devops@openwhere.com\n",
+                      "export APP_DOMAIN=$BASE_DOMAIN\n", 
+                      "export APP_PASS=$RANDOM_PASS\n",
+                      "EOF\n",
+                      "cat>/root/openldap/vpnuser.ldif<<EOL \n",
+                      "dn: cn=vpnuser,ou=Users,$BASE_DN\n",
+                      "objectClass: inetOrgPerson\n",
+                      "objectClass: organizationalPerson\n",
+                      "objectClass: person\n",
+                      "objectClass: top\n",
+                      "cn: vpnuser\n",
+                      "sn: vpnuser\n",
+                      "givenName: vpnuser\n",
+                      "mail: devops@openwhere.com\n",
+                      "ou: Users\n",
+                      "EOL\n",
+                      "cat>/root/openldap/99ldapadd<<EOL \n",
+                      "ldapadd -x -D cn=admin,$BASE_DN -w $RANDOM_PASS -f /root/vpnuser.ldif\n",
+                      "ldappasswd -xD cn=admin,$BASE_DN -w $RANDOM_PASS -s $VPN_PASS cn=vpnuser,ou=Users,$BASE_DN\n",
+                      "EOL\n",
+                      "chmod +x /root/openldap/99ldapadd\n",
+                      "cat>/root/openldap/Dockerfile<<EOF \n",
+                      "FROM turnkeylinux/openldap-13.0 \n",
+                      "ADD inithooks.conf /etc/inithooks.conf \n",
+                      "ADD vpnuser.ldif /root/vpnuser.ldif \n",
+                      "ADD 99ldapadd /usr/lib/inithooks/firstboot.d/99ldapadd\n",
+                      "EOF\n",
+                      "docker build -t openldap-13.0 /root/openldap \n",
+                      "docker run -i -t -d -p 80:80 -p 443:443 -p 12320:12320 -p 12321:12321 -p 12322:12322 -p 686:686 -p 389:389 -p 636:636 --name openldap openldap-13.0 \n"
+                      
+                  ] ]
+              }
+          },
+          "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ldap-01"
+          },
+          {
+            "Key": "CostCenter",
+            "Value": {
+              "Ref": "NetworkName"
+            }
+          }
+        ]
+      },
+      "DependsOn" : "NatDevice"
+    },
+    "OpenLDAPIPAddress" : {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc",
+        "InstanceId": {
+          "Ref": "OpenLDAPInstance"
+        }
+      }
+    },
+    "VpnDNSRecord": {
+        "Type": "AWS::Route53::RecordSet",
+        "Properties": {
+            "HostedZoneId": {"Ref":"HostedZoneId"},
+            "Comment": "DNS name for my instance.",
+
+            "Name": { "Ref": "VpnDNSName" },
+            "Type": "A",
+            "TTL": "300",
+            "ResourceRecords": [
+                {
+                    "Ref": "OpenVPNIPAddress"
+                }
+            ]
+        }
+    },
+    "LdapDNSRecord": {
+        "Type": "AWS::Route53::RecordSet",
+        "Properties": {
+            "HostedZoneId": {"Ref":"HostedZoneId"},
+            "Comment": "DNS name for my instance.",
+
+            "Name": { "Ref": "LdapDNSName" },
+            "Type": "A",
+            "TTL": "300",
+            "ResourceRecords": [
+                {
+                    "Ref": "OpenLDAPIPAddress"
+                }
+            ]
+        }
+    }
+  },
+
+  
+
+  "Outputs": {
+    "VpcId": {
+      "Description": "A VPC ID.",
+      "Value": {
+        "Ref": "VPC"
+      }
+    },
+    "DmzSubnetId": {
+      "Value": {
+        "Ref": "DmzSubnet"
+      }
+    },
+    "BackendSubnetId": {
+      "Value": {
+        "Ref": "BackendSubnet"
+      }
+    },
+    "VPNAddress": {
+      "Value": {
+        "Ref": "OpenVPNIPAddress"
+      }
+    },
+    "LDAPAddress": {
+      "Value": {
+        "Ref": "OpenLDAPIPAddress"
+      }
+    }
+  }
+}

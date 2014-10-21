@@ -1,0 +1,342 @@
+{
+    "AWSTemplateFormatVersion":"2010-09-09",
+    "Description":"Schwerpunkt Server",
+    "Parameters":{
+        "VpcId":{
+            "Description":"Id of the VPC to run your instance",
+            "Type":"String",
+            "Default":"vpc-22b35647"
+        },
+        "subnetId1":{
+            "Description":"Id of the subnet for your instance",
+            "Type":"String",
+            "Default":"subnet-90ccb4b8"
+        },
+        "subnetCidrAddress":{
+            "Description":"Address of your subnet",
+            "Type":"String",
+            "Default":"10.22.0.0"
+        },
+        "subnetCidrPrefix":{
+            "Description":"Address prefix of your subnet (ex. 255.255.255.0)",
+            "Type":"String",
+            "Default":"255.255.255.0"
+        },
+        "amiID":{
+            "Description":"Id of the ami for the host machine",
+            "Type":"String",
+            "Default":"ami-7c807d14"
+        },
+        "DevOpsBucket":{
+            "Description":"Bucket containing resources for cloud init",
+            "Type":"String",
+            "Default":"devops.openwhere.com"
+        },
+        "KeyName":{
+            "Description":"Name of the Key for connection",
+            "Type":"String",
+            "Default":"OpenWhereRoot"
+        },
+        "HostedZoneId":{
+            "Description":"Id of the hosted zone for route 53 records",
+            "Type":"String",
+            "Default":"Z358LNG0XOCW3B"
+        },
+        "DNSName":{
+            "Description":"Id of the hosted zone for route 53 records",
+            "Type":"String",
+            "Default":"vpn-owdev.openwheredemo.com"
+        },
+        "InstanceType":{
+            "Description":"Default type of EC2 instance to launch.",
+            "Type":"String",
+            "Default":"m3.medium",
+            "AllowedValues":[
+                "t2.micro",
+                "t2.small",
+                "t2.medium",
+                "m1.small",
+                "m1.medium",
+                "m1.large",
+                "m1.xlarge",
+                "m2.xlarge",
+                "m2.2xlarge",
+                "m2.4xlarge",
+                "m3.medium",
+                "m3.large",
+                "m3.xlarge",
+                "m3.2xlarge",
+                "c1.xlarge",
+                "cc2.8xlarge",
+                "cg1.4xlarge",
+                "cr1.8xlarge",
+                "hi1.4xlarge",
+                "hs1.8xlarge"
+            ],
+            "ConstraintDescription":"must be a valid EC2 instance type."
+        },
+        "VpnUserPassword": {
+            "Description": "Password for VpnUser (cn=vpnuser,ou=Users)",
+            "MinLength": "8",
+            "Type": "String"
+        },
+        "VpnPkcsPassword": {
+            "Description": "Password to unlock the cert and key from the .pfx file",
+            "MinLength": "8",
+            "Type": "String"
+        },
+        "VpnPkcsLocation": {
+            "Description": "Location of the .pfx file in the DevOpsBucket",
+            "Type": "String",
+            "Default":"/keys/openwherevpn.pfx"
+        }
+    },
+    "Mappings":{
+
+    },
+    "Resources":{
+        "VpnRole":{
+            "Type":"AWS::IAM::Role",
+            "Properties":{
+                "AssumeRolePolicyDocument":{
+                    "Statement":[
+                        {
+                            "Effect":"Allow",
+                            "Principal":{
+                                "Service":[
+                                    "ec2.amazonaws.com"
+                                ]
+                            },
+                            "Action":[
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path":"/",
+                "Policies":[
+                    {
+                        "PolicyName":"s3-devops",
+                        "PolicyDocument":{
+                            "Statement":[
+                                {
+                                    "Effect":"Allow",
+                                    "Action":[
+                                        "s3:ListBucket",
+                                        "s3:GetObject"
+                                    ],
+                                    "Resource":[
+                                        {
+                                            "Fn::Join":[
+                                                "",
+                                                [
+                                                    "arn:aws:s3:::",
+
+                                                    {
+                                                        "Ref":"DevOpsBucket"
+                                                    },
+                                                    "*"
+                                                ]
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "PolicyName":"cloudwatch-basic",
+                        "PolicyDocument":{
+                            "Version":"2012-10-17",
+                            "Statement":[
+                                {
+                                    "Sid":"Stmt1395950054000",
+                                    "Effect":"Allow",
+                                    "Action":[
+                                        "cloudwatch:EnableAlarmActions",
+                                        "cloudwatch:PutMetricData",
+                                        "cloudwatch:PutMetricAlarm"
+                                    ],
+                                    "Resource":[
+                                        "*"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "VpnRoleProfile":{
+            "Type":"AWS::IAM::InstanceProfile",
+            "Properties":{
+                "Path":"/",
+                "Roles":[
+                    {
+                        "Ref":"VpnRole"
+                    }
+                ]
+            }
+        },
+        "OpenVPNSecurityGroup" : {
+          "Type" : "AWS::EC2::SecurityGroup",
+          "Properties" : {
+              "VpcId" : { "Ref" : "VpcId" },
+              "GroupDescription" : "Enable internal access to the NAT device",
+              "SecurityGroupIngress" : [
+                  { 
+                      "IpProtocol" : "icmp",
+                      "FromPort" : "-1",
+                      "ToPort" : "-1",
+                      "CidrIp" : "0.0.0.0/0"
+                  },
+                  { 
+                      "IpProtocol" : "udp",
+                      "FromPort" : "1194",
+                      "ToPort" : "1194",
+                      "CidrIp" : "0.0.0.0/0"
+                  },
+                  { 
+                      "IpProtocol" : "tcp",
+                      "FromPort" : "443",
+                      "ToPort" : "443",
+                      "CidrIp" : "0.0.0.0/0"
+                  }
+              ]
+          }
+        },
+        "OpenVPNInstance" : {
+          "Type" : "AWS::EC2::Instance",
+          "Properties" : {
+              "InstanceType" : { "Ref" : "InstanceType" },
+              "IamInstanceProfile": { "Ref": "VpnRoleProfile"},
+              "KeyName" : { "Ref" : "KeyName" },
+              "SubnetId" : { "Ref" : "subnetId1" },
+              "SourceDestCheck" : "false",
+              "SecurityGroupIds" : [ { "Ref" : "OpenVPNSecurityGroup" }, "sg-21877f44" ],
+              "ImageId" : {"Ref":"amiID"},
+              "UserData" : {
+                  "Fn::Base64" : { 
+                      "Fn::Join" : [ "", [
+                          "#!/bin/bash -e\n",
+                          "yum -y update \n",
+                          "yum clean all \n",
+                          "MY_IP=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
+                          "yum -y install wget gcc make rpm-build autoconf.noarch zlib-devel pam-devel openssl-devel git openvpn wget lzo1 openvpn-auth-ldap \n",
+                          "mkdir -p /etc/openvpn/easy-rsa/2.0 \n",
+                          "git clone https://github.com/OpenVPN/easy-rsa.git -b release/2.x /easy-rsa \n",
+                          "cp -r /easy-rsa/easy-rsa/2.0/* /etc/openvpn/easy-rsa/2.0/ \n",
+                          "sed -i 's,export KEY_CONFIG=.*,export KEY_CONFIG=/etc/openvpn/easy-rsa/2.0/openssl-1.0.0.cnf,g' /etc/openvpn/easy-rsa/2.0/vars \n",
+                          "cd /etc/openvpn/easy-rsa/2.0 \n",
+                          "chmod 755 /etc/openvpn/easy-rsa/2.0/* \n",
+                          "source /etc/openvpn/easy-rsa/2.0/vars \n",
+                          "/etc/openvpn/easy-rsa/2.0/clean-all \n",
+                          "aws s3 cp s3://",{ "Ref" : "DevOpsBucket" },{ "Ref" : "VpnPkcsLocation" }," /etc/openvpn/easy-rsa/2.0/keys/ \n",
+                          "openssl pkcs12 -in keys/openwherevpn.pfx  -nocerts -out keys/ca.key -passin pass:",{ "Ref" : "VpnPkcsPassword" }," -passout pass:",{ "Ref" : "VpnPkcsPassword" },"\n",
+                          "openssl rsa -in keys/ca.key -out keys/ca.key -passin pass:",{ "Ref" : "VpnPkcsPassword" },"\n",
+                          "openssl pkcs12 -in keys/openwherevpn.pfx -nokeys -out keys/ca.crt -passin pass:",{ "Ref" : "VpnPkcsPassword" },"\n",
+                          "/etc/openvpn/easy-rsa/2.0/build-key-server --batch server \n",
+                          "/etc/openvpn/easy-rsa/2.0/build-dh \n",
+                          "sed -i 's/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/g' /etc/sysctl.conf \n",
+                          "useradd vpnuser -s /bin/false \n",
+                          "echo \"",{ "Ref" : "VpnUserPassword" },"\" | passwd --stdin vpnuser \n",
+                          "cat>/etc/openvpn/server.conf<<EOL \n",
+                            "port 1194 #- port\n",
+                            "proto udp #- protocol\n",
+                            "dev tun\n",
+                            "tun-mtu 1500\n",
+                            "tun-mtu-extra 32\n",
+                            "mssfix 1450\n",
+                            "reneg-sec 0\n",
+                            "ca /etc/openvpn/easy-rsa/2.0/keys/ca.crt\n",
+                            "cert /etc/openvpn/easy-rsa/2.0/keys/server.crt\n",
+                            "key /etc/openvpn/easy-rsa/2.0/keys/server.key\n",
+                            "dh /etc/openvpn/easy-rsa/2.0/keys/dh2048.pem\n",
+                            "plugin /usr/lib64/openvpn/plugin/lib/openvpn-auth-pam.so /etc/pam.d/login #- Comment this line if you are using FreeRADIUS\n",
+                            "#plugin /etc/openvpn/radiusplugin.so /etc/openvpn/radiusplugin.cnf #- Uncomment this line if you are using FreeRADIUS\n",
+                            "client-cert-not-required\n",
+                            "username-as-common-name\n",
+                            "server 10.8.0.0 ",{ "Ref" : "subnetCidrPrefix" },"\n",
+                            "#push \"redirect-gateway def1\" \n",
+                            "push \"dhcp-option DNS 8.8.8.8\" \n",
+                            "push \"dhcp-option DNS 8.8.4.4\" \n",
+                            "keepalive 5 30 \n",
+                            "comp-lzo \n",
+                            "persist-key\n",
+                            "persist-tun\n",
+                            "status /var/log/openvpn.log\n",
+                            "verb 3\n",
+                            "push \"route $MY_IP 255.255.255.0\" \n",
+                          "EOL\n",                          
+                          "iptables -F\n",
+                          "iptables -F -t nat\n",
+                          "iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT \n",
+                          "iptables -A FORWARD -s 10.8.0.0/24 -j ACCEPT\n",
+                          "iptables -A FORWARD -j REJECT\n",
+                          "iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE\n",
+                          "iptables -t nat -A POSTROUTING -j SNAT --to-source $MY_IP\n",
+                          "service iptables save\n",
+                          "service iptables restart \n",
+                          "#echo 'push \"route ", { "Ref" : "subnetCidrAddress" },"  ",{ "Ref" : "subnetCidrPrefix" }," \"' >> /etc/openvpn/server.conf\n",
+                          "service openvpn start\n",
+                          "chkconfig openvpn on\n",                          
+                          "sysctl -p\n"                    
+                      ] ]
+                  }
+              },
+              "Tags": [
+                  {
+                    "Key": "Name", "Value": "vpn-01"
+                  },
+                  {
+                    "Key":"Purpose", "Value":"vpn"
+                  },
+                  {
+                    "Key":"DeployGroup", "Value":"schwerpunkt"
+                  }
+              ]
+          }
+        },
+
+        "OpenVPNIPAddress" : {
+          "Type": "AWS::EC2::EIP",
+          "Properties": {
+            "Domain": "vpc",
+            "InstanceId": {
+              "Ref": "OpenVPNInstance"
+            }
+          }
+        },
+        "ServerIPAssoc" : {
+            "Type" : "AWS::EC2::EIPAssociation",
+            "Properties" : {
+                "InstanceId" : { "Ref" : "OpenVPNInstance" },
+                "AllocationId" : { "Fn::GetAtt" : [ "OpenVPNIPAddress", "AllocationId" ]}
+            }
+        },
+        "DNSRecord": {
+            "Type": "AWS::Route53::RecordSet",
+            "Properties": {
+                "HostedZoneId": {"Ref":"HostedZoneId"},
+                "Comment": "DNS name for my instance.",
+
+                "Name": { "Ref": "DNSName" },
+                "Type": "A",
+                "TTL": "300",
+                "ResourceRecords": [
+                    {
+                        "Ref": "OpenVPNIPAddress"
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs" : {
+        "VPNAddress" : {
+            "Value" : {  "Fn::GetAtt" : [ "OpenVPNInstance", "PublicIp" ]}
+        },
+        "NPMDNS" : {
+            "Value" :  { "Ref": "DNSName" }
+        }
+    }
+}
