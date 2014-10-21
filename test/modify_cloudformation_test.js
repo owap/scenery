@@ -96,7 +96,7 @@ exports.createOriginalTemplate = function(test){
         test.done();
     }
 
-    var v = new Validator(filePath);
+    var v = new Validator(filePath, __dirname + '/../config.json');
     v.validate(validationCallback);
 };
 
@@ -113,5 +113,26 @@ exports.testGetResourcesByType = function(test){
     var ec2Instances = newTemplate.getResourcesByType('AWS::EC2::Instance');
     test.ok(!!ec2Instances);
     test.ok(2 === ec2Instances.length);
+    test.done();
+};
+
+exports.testModifyResource = function(test){
+    test.expect(3);
+
+    // Grab the first EC2 instance in the template
+    var originalInstance = t.getResourcesByType('AWS::EC2::Instance')[0];
+    var newTemplate = Template.parse(filePath);
+    var modifiedInstance = newTemplate.getResourcesByType('AWS::EC2::Instance')[0];
+
+    // Modify it
+    modifiedInstance.instanceType('t1.micro');
+
+    // Assert that the original instance does not match the new one
+    test.notDeepEqual(originalInstance, modifiedInstance);
+    test.notDeepEqual(newTemplate, t);
+
+    // Assert that modifying objects is reflected in the template that houses them
+    test.ok('t1.micro' === newTemplate.getResourcesByType('AWS::EC2::Instance')[0].node.Properties.InstanceType);
+
     test.done();
 };
