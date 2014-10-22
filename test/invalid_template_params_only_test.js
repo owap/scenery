@@ -44,7 +44,7 @@ exports.testInvalidTemplateParamsOnly = function(test){
 
     // Assert that no errors are thrown when invoking Validate
     test.doesNotThrow(function(){
-        var v = new Validator(filePath);
+        var v = new Validator(filePath, __dirname+'/../config.json');
         v.validate(validationCallback);
     });
 };

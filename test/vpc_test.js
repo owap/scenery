@@ -54,6 +54,6 @@ exports.vpcTest = function(test){
         test.done();
     }
 
-    var v = new Validator(filePath);
+    var v = new Validator(filePath, __dirname+'/../config.json');
     v.validate(validationCallback);
 };
