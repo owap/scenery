@@ -198,7 +198,61 @@ see that our only resource (from the previous examples) is no longer present:
 ```
 
 #### Deleting Cloudformation Template Parameters
-TODO
+Similar to how we delete Resources, we can delete parameters from our Template
+object by invoking the `removeParameterByKey` function. Let's say we have the
+following CF Template with three parameters:
+```json
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "",
+    "Parameters": {
+        "TestParam0": {
+            "Type": "String",
+            "Default": "Test Value 0"
+        },
+        "TestParam1": {
+            "Type": "String",
+            "Default": "Test Value 1"
+        },
+        "TestParam2": {
+            "Type": "String",
+            "Default": "Test Value 2"
+        }
+    },
+    "Mappings": {},
+    "Conditions": {},
+    "Resources": {},
+    "Outputs": {}
+}
+```
+
+The following Javascript demonstrates how to remove two of the three parameters
+from the above CF template:
+```javascript
+var t = Template.parse(filePath);
+t.removeParameterByKey('TestParam0');
+t.removeParameterByKey('TestParam2');
+t.save('/tmp/fewerParams.json');
+```
+
+When we open `/tmp/fewerParams.json`, we see that there is only one parameter
+remaining:
+```json
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "",
+    "Parameters": {
+        "TestParam1": {
+            "Type": "String",
+            "Default": "Test Value 1"
+        }
+    },
+    "Mappings": {},
+    "Conditions": {},
+    "Resources": {},
+    "Outputs": {}
+}
+```
 
 ## Validing CloudFormation Templates
 Assuming that your CloudFormation script is kept in a file `/tmp/MyCFTemplate.json`,
