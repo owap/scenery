@@ -2,7 +2,9 @@
 
 ## Setup
 + Run `npm install` in the root spatula directory
-+ Add your AWS credentials to a file `config.json`:
++ If you are not running on an EC2 instance, and you wish to run validations
+on your CloudFormation templates, you must add your AWS credentials to a file
+`config.json`:
 ```json
 {
     "accessKeyId": "YOUR_ACCESS_KEY_ID",
@@ -10,6 +12,9 @@
     "region": "us-east-1"
 }
 ```
+If you are running Spatula from an EC2 Instance, this information should be
+loaded automatically from the IAM roles. See [Setting AWS Credentials](http://docs.aws.amazon.com/AWSJavaScriptSDK/guide/node-configuring.html)
+for more information on this topic.
 
 ## Developing
 + Running `grunt` in the directory will:
@@ -315,3 +320,15 @@ retryable: false }
 
 As you can see, the output from the `aws-sdk` is passed through the
 `message` var of the `validationCallback` function we defined above.
+
+## Troubleshooting
+### ConfigError: Missing region in config
+If you see this error, and you are not on an EC2 instance:
+
++ Configure your `config.json` file per the setup section at the top of this
+document
++ Pass the URL of this config file you specified above into the Validator
+object when you instantiate it:
+```javascript
+var myValidator = Validator('/tmp/MyCFTemplate.json', '/opt/aws_config.json');
+```

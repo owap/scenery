@@ -132,6 +132,6 @@ exports.ec2_ecc_elb_secuirty_test = function(test){
         test.done();
     }
 
-    var v = new Validator(filePath);
+    var v = new Validator(filePath, __dirname+'/../config.json');
     v.validate(validationCallback);
 };
