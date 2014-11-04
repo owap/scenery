@@ -25,7 +25,7 @@ var ElastiCacheCluster = require('./lib/elasticache/ElastiCacheCluster.js');
 var LoadBalancer = require('./lib/elasticloadbalancing/LoadBalancer.js');
 var Validator = require('./lib/Validator.js');
 
-var Spatula = {
+var Scenery = {
     AutoScalingGroup: AutoScalingGroup,
     ElastiCacheCluster: ElastiCacheCluster,
     Instance: Instance,
@@ -45,4 +45,4 @@ var Spatula = {
     VPCGatewayAttachment: VPCGatewayAttachment
 };
 
-module.exports = Spatula;
+module.exports = Scenery;

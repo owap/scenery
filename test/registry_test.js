@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Test the instantiation of the Spatula module
+ * Test the instantiation of the Scenery module
  **/
 
 exports.registryTest = function(test){

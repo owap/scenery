@@ -1,8 +1,8 @@
 'use strict';
 
 exports.modifyMachine = function(test){
-    var Spatula = require('../spatula.js');
-    var Template = Spatula.Template;
+    var Scenery = require('../scenery.js');
+    var Template = Scenery.Template;
     var filePath = '/tmp/myCloudformationTemplate.json';
 
     var t = new Template();
@@ -19,7 +19,7 @@ exports.modifyMachine = function(test){
     var modifiedTemplate = Template.parse(filePath);
     var ec2Instances = modifiedTemplate.getResourcesByType('AWS::EC2::Instance');
 
-    // The ec2Instances var is an array of Spatula Instance objects
+    // The ec2Instances var is an array of Scenery Instance objects
     var modifiedInstance = ec2Instances[0];
     modifiedInstance.imageId('ami-654321');
     modifiedInstance.instanceType('t1.micro');
@@ -30,8 +30,8 @@ exports.modifyMachine = function(test){
 };
 
 exports.deleteMachine = function(test){
-    var Spatula = require('../spatula.js');
-    var Template = Spatula.Template;
+    var Scenery = require('../scenery.js');
+    var Template = Scenery.Template;
     var filePath = '/tmp/myCloudformationTemplate.json';
 
     var t = new Template();
@@ -59,8 +59,8 @@ exports.deleteMachine = function(test){
 };
 
 exports.deleteParams = function(test){
-    var Spatula = require('../spatula.js');
-    var Template = Spatula.Template;
+    var Scenery = require('../scenery.js');
+    var Template = Scenery.Template;
     var filePath = '/tmp/paramTest.json';
 
     var it = new Template();
