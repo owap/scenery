@@ -1,7 +1,7 @@
-# Spatula: CloudFormation Templates in Javascript
+# Scenery: CloudFormation Templates in Javascript
 
 ## Setup
-+ Run `npm install` in the root spatula directory
++ Run `npm install` in the root scenery directory
 + If you are not running on an EC2 instance, and you wish to run validations
 on your CloudFormation templates, you must add your AWS credentials to a file
 `config.json`:
@@ -12,7 +12,7 @@ on your CloudFormation templates, you must add your AWS credentials to a file
     "region": "us-east-1"
 }
 ```
-If you are running Spatula from an EC2 Instance, this information should be
+If you are running Scenery from an EC2 Instance, this information should be
 loaded automatically from the IAM roles. See [Setting AWS Credentials](http://docs.aws.amazon.com/AWSJavaScriptSDK/guide/node-configuring.html)
 for more information on this topic.
 
@@ -22,15 +22,15 @@ for more information on this topic.
     - Run unit tests to make sure everything is passing correctly
 
 ## Building CloudFormation Templates
-To build CloudFormation templates, require the Spatula library into your
+To build CloudFormation templates, require the Scenery library into your
 project, and use it to instantiate `Template` (and other) objects that will
 be compiled to CloudFormation Templates.
 
 ```javascript
-var Spatula = require('spatula');
+var Scenery = require('scenery');
 var filePath = '/tmp/myCloudformationTemplate.json';
 
-var t = new Spatula.Template();
+var t = new Scenery.Template();
 
 // Create a single EC2 instance in the tempalte
 t.ec2Instance('TestInstance')
@@ -45,7 +45,7 @@ t.save(filePath);
 function validationCallback(isValid, message){
     console.log('Is the template valid?', isValid, message);
 }
-var v = new Spatula.Validator(filePath, '/tmp/aws_config.json');
+var v = new Scenery.Validator(filePath, '/tmp/aws_config.json');
 v.validate(validationCallback);
 ```
 
@@ -61,7 +61,7 @@ Examples of more complex CloudFormation templates can be found in the `tests/`
 folder.
 
 ## Modifying Existing Cloudformation Templates
-To load an existing CloudFormation template from JSON into Spatula objects,
+To load an existing CloudFormation template from JSON into Scenery objects,
 invoke the `Template.parse()` function. For example:
 
 ```javascript
@@ -75,23 +75,23 @@ type using the template object's `getResourcesByType` function:
 var myTemplate = Template.parse('/path/to/your/cf/template.JSON');
 var ec2Instances = myTemplate.getResourcesByType('AWS::EC2::Instance');
 
-// The ec2Instances var is an array of Spatula Instance objects
+// The ec2Instances var is an array of Scenery Instance objects
 var firstEc2Instance = ec2Instances[0];
 ```
 
 Now that you have access to individual resources, you can modify them with
-standard Spatula functions. Save the template again to see the difference!
+standard Scenery functions. Save the template again to see the difference!
 
 ### Example Workflow
-Below is an example workflow that highlights Spatula's ability to modify
+Below is an example workflow that highlights Scenery's ability to modify
 Cloudformation templates.
 
 #### Create a CloudFormation Template in Javascript
 ```javascript
-var Spatula = require('spatula');
+var Scenery = require('scenery');
 var filePath = '/tmp/myCloudformationTemplate.json';
 
-var t = new Spatula.Template();
+var t = new Scenery.Template();
 
 // Create a single EC2 instance in the tempalte
 t.ec2Instance('TestInstance')
@@ -138,7 +138,7 @@ var filePath = '/tmp/myCloudformationTemplate.json';
 var modifiedTemplate = Template.parse(filePath);
 var ec2Instances = modifiedTemplate.getResourcesByType('AWS::EC2::Instance');
 
-// The ec2Instances var is an array of Spatula Instance objects
+// The ec2Instances var is an array of Scenery Instance objects
 
 var modifiedInstance = ec2Instances[0];
 modifiedInstance.imageId('ami-654321');         // Modify the ImageId
