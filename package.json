@@ -1,8 +1,8 @@
 {
-  "name": "spatula",
+  "name": "scenery",
   "version": "0.0.0",
-  "description": "Flip your AWS Stacks into existance with Spatula: The CloudFormation Javascript Library.",
-  "main": "spatula.js",
+  "description": "Flip your AWS Stacks into existance with Scenery: The CloudFormation Javascript Library.",
+  "main": "scenery.js",
   "scripts": {
     "test": "grunt nodeunit"
   },

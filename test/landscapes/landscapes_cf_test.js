@@ -7,7 +7,7 @@ function ingestTemplate(test, templateFilename){
     // Set up the template
     var filePath = __dirname + '/' + templateFilename + '.json'
     var t = new Template.parse(filePath);
-    t.save(__dirname + '/' + templateFilename + '_spatula.json');
+    t.save(__dirname + '/' + templateFilename + '_scenery.json');
 
     // Assertions
     test.expect(2);
