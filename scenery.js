@@ -39,6 +39,7 @@ var ElastiCacheCluster = require('./lib/elasticache/ElastiCacheCluster.js');
 var LoadBalancer = require('./lib/elasticloadbalancing/LoadBalancer.js');
 var Validator = require('./lib/Validator.js');
 
+// TODO: Dynamically register all objects
 var Scenery = {
     AutoScalingGroup: AutoScalingGroup,
     ElastiCacheCluster: ElastiCacheCluster,
