@@ -19,7 +19,7 @@
  **/
 
 exports.registryTest = function(test){
-    var Registry = require('../lib/registry.js');
+    var Registry = require('../lib/Registry.js');
     var registry = new Registry();
 
     test.expect(2);
