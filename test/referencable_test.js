@@ -1,4 +1,4 @@
-// Copyright 2014 OpenWhere, Inc.
+// Copyright 2015 OpenWhere, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 'use strict';
 
-var Instance = require ('../lib/ec2/Instance.js');
+var Instance = require ('../lib/EC2/Instance.js');
 var Referencable = require ('../lib/Referencable.js');
 var _ = require('lodash');
 

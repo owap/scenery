@@ -56,10 +56,10 @@ exports.createOriginalTemplate = function(test){
 
     for(var j in instanceIds){
         t.ec2Instance(instanceIds[j])
-            .keyName( t.ref('KeyName') )
-            .imageId( t.ref('EC2InstanceAMI') )
-            .instanceType( t.ref('EC2InstanceType') )
-            .securityGroups( t.ref('InstanceSecurityGroup') );
+            .KeyName( t.ref('KeyName') )
+            .ImageId( t.ref('EC2InstanceAMI') )
+            .InstanceType( t.ref('EC2InstanceType') )
+            .SecurityGroups( t.ref('InstanceSecurityGroup') );
     }
 
     // Create the load balancer (for the ec2 instances)
@@ -71,10 +71,10 @@ exports.createOriginalTemplate = function(test){
         'Timeout': '5'
     };
     t.loadBalancer('ec2LoadBalancer')
-        .availabilityZones()
-        .healthCheck(lbHealth)
-        .instances(instanceIds)
-        .listeners({
+        .AvailabilityZones()
+        .HealthCheck(lbHealth)
+        .Instances(instanceIds)
+        .Listeners({
           'LoadBalancerPort' : '80',
           'InstancePort' : { 'Ref' : 'WebServerPort' },
           'Protocol' : 'HTTP'
@@ -83,18 +83,18 @@ exports.createOriginalTemplate = function(test){
     // Create Elasticache Cluster
     var eccName = 'TestECC';
     t.elastiCacheCluster(eccName)
-        .autoMinorVersionUpgrade('true')
-        .cacheNodeType( t.ref('CacheType') )
-        .clusterName(eccName)
-        .engine('memcached')
-        .numCacheNodes(1)
-        .vpcSecurityGroupIds( t.fnGetAtt('CacheSecurityGroup', 'GroupId') );
+        .AutoMinorVersionUpgrade('true')
+        .CacheNodeType( t.ref('CacheType') )
+        .ClusterName(eccName)
+        .Engine('memcached')
+        .NumCacheNodes(1)
+        .VpcSecurityGroupIds( t.fnGetAtt('CacheSecurityGroup', 'GroupId') );
 
     // Create Security Groups
     t.securityGroup('InstanceSecurityGroup', 'Security Group for the EC2 Instances')
-        .tcpIn({ 'CidrIp': t.ref('OpenCidrIp')}, t.ref('WebServerPort'), t.ref('RDPPort'));
+        .TcpIn({ 'CidrIp': t.ref('OpenCidrIp')}, t.ref('WebServerPort'), t.ref('RDPPort'));
     t.securityGroup('CacheSecurityGroup', 'Security Group for the ElastiCache Cluster')
-        .tcpIn({'SourceSecurityGroupName': t.ref('InstanceSecurityGroup')}, 11211);
+        .TcpIn({'SourceSecurityGroupName': t.ref('InstanceSecurityGroup')}, 11211);
 
     t.save(filePath);
 
@@ -139,7 +139,7 @@ exports.testModifyResource = function(test){
     var modifiedInstance = newTemplate.getResourcesByType('AWS::EC2::Instance')[0];
 
     // Modify it
-    modifiedInstance.instanceType('t1.micro');
+    modifiedInstance.InstanceType('t1.micro');
 
     // Assert that the original instance does not match the new one
     test.notDeepEqual(originalInstance, modifiedInstance);

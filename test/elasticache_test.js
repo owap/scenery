@@ -26,10 +26,10 @@ exports.testElasticache = function(test){
     var filePath = '/tmp/elasticache_test_template.json';
 
     t.elastiCacheCluster('TestECC')
-        .autoMinorVersionUpgrade('true')
-        .cacheNodeType('cache.m3.medium')
-        .engine('memcached')
-        .numCacheNodes(1);
+        .AutoMinorVersionUpgrade('true')
+        .CacheNodeType('cache.m3.medium')
+        .Engine('memcached')
+        .NumCacheNodes(1);
 
     t.save(filePath);
 

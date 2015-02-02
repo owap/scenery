@@ -71,17 +71,17 @@ exports.ec2_ecc_elb_secuirty_test = function(test){
     t.internetGateway(myGatewayId);
 
     var myVpcId = 'TestVPC';
-    t.vpc(myVpcId).cidrBlock( t.ref('CidrBlock') );
+    t.vpc(myVpcId).CidrBlock( t.ref('CidrBlock') );
 
     t.vpcGatewayAttachment(myVpcId + 'Attachment')
-        .vpcId( t.ref(myVpcId) )
-        .internetGatewayId( t.ref(myGatewayId) );
+        .VpcId( t.ref(myVpcId) )
+        .InternetGatewayId( t.ref(myGatewayId) );
 
     // Subnet
     var mySubnetId = 'MySecretSubnet';
     t.subnet(mySubnetId)
-        .cidrBlock( t.ref('CidrBlock') )
-        .vpcId( t.ref(myVpcId) );
+        .CidrBlock( t.ref('CidrBlock') )
+        .VpcId( t.ref(myVpcId) );
 
  
     // Create EC2 Instances
@@ -92,10 +92,10 @@ exports.ec2_ecc_elb_secuirty_test = function(test){
 
     for(var j in instanceIds){
         t.ec2Instance(instanceIds[j])
-            .keyName( t.ref('KeyName') )
-            .imageId( t.ref('EC2InstanceAMI') )
-            .instanceType( t.ref('EC2InstanceType') )
-            .subnetId( t.ref(mySubnetId) );
+            .KeyName( t.ref('KeyName') )
+            .ImageId( t.ref('EC2InstanceAMI') )
+            .InstanceType( t.ref('EC2InstanceType') )
+            .SubnetId( t.ref(mySubnetId) );
     }
 
     // Create the load balancer (for the ec2 instances)
@@ -107,30 +107,30 @@ exports.ec2_ecc_elb_secuirty_test = function(test){
         'Timeout': '5'
     };
     var loadBalancer = t.loadBalancer('ec2LoadBalancer')
-                        .healthCheck(lbHealth)
-                        .instances(instanceIds)
-                        .listeners({
+                        .HealthCheck(lbHealth)
+                        .Instances(instanceIds)
+                        .Listeners({
                           'LoadBalancerPort' : '80',
                           'InstancePort' : { 'Ref' : 'WebServerPort' },
                           'Protocol' : 'HTTP'
                         })
-                        .subnets( t.ref(mySubnetId) );
+                        .Subnets( t.ref(mySubnetId) );
 
     // Create Elasticache Cluster
     var eccName = 'TestECC2';
     t.elastiCacheCluster(eccName)
-        .autoMinorVersionUpgrade('true')
-        .cacheNodeType( t.ref('CacheType') )
-        .clusterName(eccName)
-        .engine('memcached')
-        .numCacheNodes(1)
-        .vpcSecurityGroupIds( t.fnGetAtt('CacheSecurityGroup', 'GroupId') );
+        .AutoMinorVersionUpgrade('true')
+        .CacheNodeType( t.ref('CacheType') )
+        .ClusterName(eccName)
+        .Engine('memcached')
+        .NumCacheNodes(1)
+        .VpcSecurityGroupIds( t.fnGetAtt('CacheSecurityGroup', 'GroupId') );
 
     // Create Security Groups
     t.securityGroup('InstanceSecurityGroup', 'Security Group for the EC2 Instances')
-        .tcpIn({ 'CidrIp': t.ref('OpenCidrIp')}, t.ref('WebServerPort'), t.ref('RDPPort'));
+        .TcpIn({ 'CidrIp': t.ref('OpenCidrIp')}, t.ref('WebServerPort'), t.ref('RDPPort'));
     t.securityGroup('CacheSecurityGroup', 'Security Group for the ElastiCache Cluster')
-        .tcpIn({'SourceSecurityGroupName': t.ref('InstanceSecurityGroup')}, 11211);
+        .TcpIn({'SourceSecurityGroupName': t.ref('InstanceSecurityGroup')}, 11211);
 
     t.save(filePath);
 

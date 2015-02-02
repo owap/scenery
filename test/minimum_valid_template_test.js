@@ -27,9 +27,9 @@ exports.testJustEC2 = function(test){
     var filePath = '/tmp/minimum_valid_test_template.json';
 
      t.ec2Instance('TestInstance')
-        .keyName('test-key')
-        .imageId('ami-123456')
-        .name('TestInstance');
+        .KeyName('test-key')
+        .ImageId('ami-123456')
+        .Name('TestInstance');
 
     t.save(filePath);
 
