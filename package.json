@@ -1,6 +1,6 @@
 {
   "name": "scenery",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Flip your AWS Stacks into existance with Scenery: The CloudFormation Javascript Library.",
   "main": "scenery.js",
   "scripts": {
