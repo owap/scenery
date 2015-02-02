@@ -22,12 +22,12 @@ exports.NameableTypeTest = function(test){
     var myInstance = new Instance();
 
     test.expect(2);
-    test.ok(myInstance instanceof Nameable);
+    test.ok(myInstance.isInstance(Nameable));
     test.ok(myInstance.Name);
     test.done();
 };
 
-exports.canNameTest = function(test){
+exports.CanNameTest = function(test){
     var myInstance = new Instance();
     var name = 'testName';
     myInstance.Name(name);
