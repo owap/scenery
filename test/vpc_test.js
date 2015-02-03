@@ -34,24 +34,24 @@ exports.vpcTest = function(test){
     t.internetGateway(myGatewayId);
 
     var myVpcId = 'TestVPC';
-    t.vpc(myVpcId).cidrBlock( t.ref('CidrBlock') );
+    t.vpc(myVpcId).CidrBlock( t.ref('CidrBlock') );
 
     t.vpcGatewayAttachment(myVpcId + 'Attachment')
-        .vpcId( t.ref(myVpcId) )
-        .internetGatewayId( t.ref(myGatewayId) );
+        .VpcId( t.ref(myVpcId) )
+        .InternetGatewayId( t.ref(myGatewayId) );
 
     // Subnet
     var mySubnetId = 'MySecretSubnet';
     t.subnet(mySubnetId)
-        .cidrBlock( t.ref('CidrBlock') )
-        .vpcId( t.ref(myVpcId) );
+        .CidrBlock( t.ref('CidrBlock') )
+        .VpcId( t.ref(myVpcId) );
     
     // EC2 Instance
     t.ec2Instance('TestInstance')
-        .keyName('test-key')
-        .imageId('ami-123456')
-        .name('TestInstance')
-        .subnetId( t.ref(mySubnetId) );
+        .KeyName('test-key')
+        .ImageId('ami-123456')
+        .Name('TestInstance')
+        .SubnetId( t.ref(mySubnetId) );
 
 
     t.save(filePath);

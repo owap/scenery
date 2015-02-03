@@ -18,25 +18,25 @@ var Parameter = require('./lib/Parameter.js');
 var Resource = require('./lib/Resource.js');
 
 // EC2 Resources
-var Instance = require('./lib/ec2/Instance.js');
-var InternetGateway = require('./lib/ec2/InternetGateway.js');
-var SecurityGroup = require('./lib/ec2/SecurityGroup.js');
-var Subnet = require('./lib/ec2/Subnet.js');
-var VPC = require('./lib/ec2/VPC.js');
-var VPCGatewayAttachment = require('./lib/ec2/VPCGatewayAttachment.js');
+var Instance = require('./lib/EC2/Instance.js');
+var InternetGateway = require('./lib/EC2/InternetGateway.js');
+var SecurityGroup = require('./lib/EC2/SecurityGroup.js');
+var Subnet = require('./lib/EC2/Subnet.js');
+var VPC = require('./lib/EC2/VPC.js');
+var VPCGatewayAttachment = require('./lib/EC2/VPCGatewayAttachment.js');
 
 // IAM Resources
-var InstanceProfile = require('./lib/iam/InstanceProfile.js');
-var Policy = require('./lib/iam/Policy.js');
-var Role = require('./lib/iam/Role.js');
+var InstanceProfile = require('./lib/IAM/InstanceProfile.js');
+var Policy = require('./lib/IAM/Policy.js');
+var Role = require('./lib/IAM/Role.js');
 
 // Autoscaling Resources
-var AutoScalingGroup = require('./lib/autoscaling/AutoScalingGroup.js');
-var LaunchConfiguration = require('./lib/autoscaling/LaunchConfiguration.js');
+var AutoScalingGroup = require('./lib/Autoscaling/AutoScalingGroup.js');
+var LaunchConfiguration = require('./lib/Autoscaling/LaunchConfiguration.js');
 
 // Other Resources
-var ElastiCacheCluster = require('./lib/elasticache/ElastiCacheCluster.js');
-var LoadBalancer = require('./lib/elasticloadbalancing/LoadBalancer.js');
+var ElastiCacheCluster = require('./lib/ElastiCache/CacheCluster.js');
+var LoadBalancer = require('./lib/ElasticLoadbalancing/LoadBalancer.js');
 var Validator = require('./lib/Validator.js');
 
 // TODO: Dynamically register all objects

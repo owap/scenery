@@ -23,9 +23,9 @@ exports.modifyMachine = function(test){
 
     // Create a single EC2 instance in the tempalte
     t.ec2Instance('TestInstance')
-            .keyName('test-key')
-            .imageId('ami-123456')
-            .name('TestInstance');
+            .KeyName('test-key')
+            .ImageId('ami-123456')
+            .Name('TestInstance');
 
     // Output Cloudformation JSON
     t.save(filePath);
@@ -35,8 +35,8 @@ exports.modifyMachine = function(test){
 
     // The ec2Instances var is an array of Scenery Instance objects
     var modifiedInstance = ec2Instances[0];
-    modifiedInstance.imageId('ami-654321');
-    modifiedInstance.instanceType('t1.micro');
+    modifiedInstance.ImageId('ami-654321');
+    modifiedInstance.InstanceType('t1.micro');
     modifiedTemplate.save('/tmp/modifiedTemplate.json');
 
     test.expect(0);
@@ -52,9 +52,9 @@ exports.deleteMachine = function(test){
 
     // Create a single EC2 instance in the tempalte
     t.ec2Instance('TestInstance')
-            .keyName('test-key')
-            .imageId('ami-123456')
-            .name('TestInstance');
+            .KeyName('test-key')
+            .ImageId('ami-123456')
+            .Name('TestInstance');
 
     // Output Cloudformation JSON
     t.save(filePath);

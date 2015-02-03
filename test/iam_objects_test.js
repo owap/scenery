@@ -21,8 +21,8 @@
 var Template = require('../lib/Template.js');
 var Validator = require('../lib/Validator.js');
 
-var Role = require('../lib/iam/Role.js');
-var Policy = require('../lib/iam/Policy.js');
+var Role = require('../lib/IAM/Role.js');
+var Policy = require('../lib/IAM/Policy.js');
 var InstanceProfile = require('../lib/iam/InstanceProfile.js');
 
 exports.testCreateSimpleProfile = function(test) {
@@ -90,7 +90,7 @@ exports.testIAMInstanceProfileRoles = function(test) {
     };
 
     var ip = new InstanceProfile('myTestInstanceProfile');
-    ip.roles( t.ref('myTestRole') );
+    ip.Roles( t.ref('myTestRole') );
 
     t.addResource(r);
     t.addResource(ip);
@@ -123,13 +123,13 @@ exports.testIAMInstanceProfilePolicies = function(test) {
         'cloudwatch:PutMetricData',
         'cloudwatch:PutMetricAlarm' ];
     var resource = [ '*' ];
-    p.statement(action, effect, resource);
+    p.Statement(action, effect, resource);
 
     var r = new Role('myTestRole');
-    r.policies( [t.ref('myTestPolicy')] );
+    r.Policies( [t.ref('myTestPolicy')] );
 
     var ip = new InstanceProfile('myTestInstanceProfile');
-    ip.roles( t.ref('myTestRole') );
+    ip.Roles( t.ref('myTestRole') );
 
     t.addResource(r);
     t.addResource(p);
