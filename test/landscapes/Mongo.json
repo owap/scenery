@@ -1,0 +1,141 @@
+{
+    "AWSTemplateFormatVersion":"2010-09-09",
+    "Description":"Schwerpunkt Server",
+    "Parameters":{
+        "VpcId":{
+            "Description":"Id of the VPC to run your instance",
+            "Type":"String",
+            "Default":"vpc-69e0550c"
+        },
+        "subnetId1":{
+            "Description":"Id of the subnet for your instance",
+            "Type":"String",
+            "Default":"subnet-4f6fa538"
+        },
+        "amiID":{
+            "Description":"Id of the ami for the host machine",
+            "Type":"String",
+            "Default":"ami-978d91fe"
+        },
+        "VPCSecurityGroupIds":{
+            "Description":"Existing Security Group IDs to assign to the instance",
+            "Type":"String",
+            "Default":"sg-b0207dd5"
+        },
+        "KeyName":{
+            "Description":"Name of the Key for connection",
+            "Type":"String",
+            "Default":"OpenWhereRoot"
+        },
+        "InstanceName":{
+            "Description":"Description of the server for tag",
+            "Type":"String",
+            "Default":"MongoDB Server"
+        },
+        "subnetCidrRange":{
+            "Description":"Address range to allow traffic from",
+            "Type":"String",
+            "Default":"10.0.0.0/8"
+        },
+        "InstanceType":{
+            "Description":"Default type of EC2 instance to launch.",
+            "Type":"String",
+            "Default":"t2.medium",
+            "AllowedValues":[
+                "t2.micro",
+                "t2.small",
+                "t2.medium",
+                "m1.small",
+                "m1.medium",
+                "m1.large",
+                "m1.xlarge",
+                "m2.xlarge",
+                "m2.2xlarge",
+                "m2.4xlarge",
+                "m3.medium",
+                "m3.large",
+                "m3.xlarge",
+                "m3.2xlarge",
+                "c1.xlarge",
+                "cc2.8xlarge",
+                "cg1.4xlarge",
+                "cr1.8xlarge",
+                "hi1.4xlarge",
+                "hs1.8xlarge"
+            ],
+            "ConstraintDescription":"must be a valid EC2 instance type."
+        }
+    },
+    "Mappings":{
+
+    },
+    "Resources":{
+        "MongoSecurityGroup" : {
+          "Type" : "AWS::EC2::SecurityGroup",
+          "Properties" : {
+              "VpcId" : { "Ref" : "VpcId" },
+              "GroupDescription" : "Enable internal access to the NAT device",
+              "SecurityGroupIngress" : [
+                  { 
+                      "IpProtocol" : "tcp",
+                      "FromPort" : "28017",
+                      "ToPort" : "28017",
+                      "CidrIp" : { "Ref" : "subnetCidrRange" }
+                  },
+                  { 
+                      "IpProtocol" : "tcp",
+                      "FromPort" : "27017",
+                      "ToPort" : "27019",
+                      "CidrIp" : { "Ref" : "subnetCidrRange" }
+                  }
+              ]
+          }
+        },
+        "MongoInstance" : {
+          "Type" : "AWS::EC2::Instance",
+          "Properties" : {
+              "InstanceType" : { "Ref" : "InstanceType" },
+              "KeyName" : { "Ref" : "KeyName" },
+              "SubnetId" : { "Ref" : "subnetId1" },
+              "SourceDestCheck" : "false",
+              "SecurityGroupIds" : [ { "Ref" : "MongoSecurityGroup" },{ "Ref" : "VPCSecurityGroupIds" } ],
+              "ImageId" : {"Ref":"amiID"},
+              "UserData" : {
+                  "Fn::Base64" : { 
+                      "Fn::Join" : [ "", [
+                          "#!/bin/bash -e\n",
+                          "yum -y update \n",
+                          "yum clean all \n",
+                          "MY_IP=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
+                          "cat>/etc/yum.repos.d/mongodb.repo<<EOL \n",
+                            "[mongodb]\n",
+                            "name=MongoDB Repository\n",
+                            "baseurl=http://downloads-distro.mongodb.org/repo/redhat/os/x86_64/\n",
+                            "gpgcheck=0\n",
+                            "enabled=1\n",
+                          "EOL\n",
+                          "yum install -y mongodb-org\n",
+                          "sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mongod.conf \n",
+                          "service mongod start\n",
+                          "chkconfig mongod on\n"                    
+                      ] ]
+                  }
+              },
+              "BlockDeviceMappings" : [
+                 {
+                    "DeviceName"  : "/dev/xvda",
+                    "Ebs" : { "VolumeSize" : "200" }
+                 }
+              ],
+              "Tags": [
+                  {
+                    "Key": "Name", "Value": { "Ref" : "InstanceName" }
+                  },
+                  {
+                    "Key":"Purpose", "Value":"mongodb"
+                  }
+              ]
+          }
+        }
+    }
+}
