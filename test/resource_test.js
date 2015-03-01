@@ -1,0 +1,97 @@
+// Copyright 2015 OpenWhere, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+'use strict';
+
+var _ = require('lodash');
+var Resource = require('../lib/Resource.js');
+var AttributeDefinition = require('../lib/properties/AttributeDefinition.js');
+
+exports.registerPropertyPrototypesTest = function(test){
+    // Set up the class to extend Resource
+    var TestClass = function(id) {
+        return Resource.call(this, id, 'TestClass', {});
+    };
+    require('util').inherits(TestClass, Resource);
+
+    // Create test properties for the registerPropertyPrototypes function
+    var propertyMap = {
+        'StringList' : { 'list': true, 'type': 'string' },
+        'StringSingle' : { 'list': false, 'type': 'string' },
+        'PropertyList' : { 'list': true, 'type': AttributeDefinition },
+        'PropertySingle' : { 'list': false, 'type': AttributeDefinition }
+    };
+
+    TestClass = Resource.registerPropertyPrototypes(TestClass, propertyMap);
+
+    test.expect(6);
+
+    // If it expects a list and doesn't get one, it should fail.
+    test.throws(
+        function() {
+            var t = new TestClass();
+            t.StringList('just a string');
+        },
+        Resource.InvalidPropertyException,
+        'Should throw an error when invalid type added to property'
+    );
+
+    // If it expects a string and gets a number, it should fail
+    test.throws(
+        function() {
+            var t = new TestClass();
+            t.StringSingle(9001);
+        },
+        Resource.InvalidPropertyException,
+        'Should throw an error passing a number when a string is expected'
+    );
+
+    // If it expects an object and gets a string, it should fail
+    test.throws(
+        function() {
+            var t = new TestClass();
+            t.PropertySingle('myGreatProperty');
+        },
+        Resource.InvalidPropertyException,
+        'Should throw an error passing a string when an AttributeDefinition is expected'
+    );
+
+    // Should throw when an AttributeException is expected and a normal object is passed
+    test.throws(
+        function() {
+            var t = new TestClass();
+            t.PropertySingle({'my': 'test object'});
+        },
+        Resource.InvalidPropertyException,
+        'Should throw an error passing an object when an AttributeDefinition is expected'
+    );
+
+    // All valid entries should be permitted!
+    test.doesNotThrow(function() {
+        var t = new TestClass();
+        t.StringList(['valid', 'strings']);
+        t.StringSingle('cause the tests to pass');
+    }, 'Issue testing primitives');
+
+    test.doesNotThrow(function() {
+        var t = new TestClass();
+        var ad1 = new AttributeDefinition();
+        var ad2 = new AttributeDefinition();
+        t.PropertySingle(ad1);
+        t.PropertyList([ad1, ad2]);
+    }, 'Issue adding properties to the document');
+
+    // All done!
+    test.done();
+};
