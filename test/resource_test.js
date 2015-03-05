@@ -15,6 +15,7 @@
 'use strict';
 
 var _ = require('lodash');
+var AWSClass = require('../lib/AWSClass.js');
 var Resource = require('../lib/Resource.js');
 var AttributeDefinition = require('../lib/properties/AttributeDefinition.js');
 
@@ -33,7 +34,7 @@ exports.registerPropertyPrototypesTest = function(test){
         'PropertySingle' : { 'list': false, 'type': AttributeDefinition }
     };
 
-    TestClass = Resource.registerPropertyPrototypes(TestClass, propertyMap);
+    TestClass = AWSClass.registerPropertyPrototypes(TestClass, propertyMap);
 
     test.expect(6);
 
