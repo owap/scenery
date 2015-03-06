@@ -19,6 +19,7 @@ module.exports = function(grunt) {
         nodeunit: {
             all: [
                 'test/**/*_test.js',
+                'test/**/*Test.js',
                 '!test/ignore/*'
             ]
         },

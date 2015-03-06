@@ -29,7 +29,7 @@ exports.testJustEC2 = function(test){
      t.ec2Instance('TestInstance')
         .KeyName('test-key')
         .ImageId('ami-123456')
-        .Name('TestInstance');
+        .addName('TestInstance');
 
     t.save(filePath);
 
