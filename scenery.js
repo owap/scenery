@@ -31,12 +31,12 @@ var Policy = require('./lib/IAM/Policy.js');
 var Role = require('./lib/IAM/Role.js');
 
 // Autoscaling Resources
-var AutoScalingGroup = require('./lib/Autoscaling/AutoScalingGroup.js');
-var LaunchConfiguration = require('./lib/Autoscaling/LaunchConfiguration.js');
+var AutoScalingGroup = require('./lib/AutoScaling/AutoScalingGroup.js');
+var LaunchConfiguration = require('./lib/AutoScaling/LaunchConfiguration.js');
 
 // Other Resources
 var ElastiCacheCluster = require('./lib/ElastiCache/CacheCluster.js');
-var LoadBalancer = require('./lib/ElasticLoadbalancing/LoadBalancer.js');
+var LoadBalancer = require('./lib/ElasticLoadBalancing/LoadBalancer.js');
 var Validator = require('./lib/Validator.js');
 
 // TODO: Dynamically register all objects
