@@ -20,7 +20,8 @@ module.exports = function(grunt) {
             all: [
                 'test/**/*_test.js',
                 'test/**/*Test.js',
-                '!test/ignore/*'
+                '!test/ignore/*',
+                '!test/landscapes/*'
             ]
         },
         jshint: {

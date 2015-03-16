@@ -1,7 +1,7 @@
 'use strict';
 
 exports.TemplateStrParamsTest = function(test) {
-    var Scenery = require('../Scenery.js');
+    var Scenery = require('../scenery.js');
     var t = new Scenery.Template();
     t.strParam('CidrBlock', '10.0.0.0/16', 'The CIDR block you want the VPC to cover');
     var myVpcId = 'TestVPC';
