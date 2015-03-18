@@ -17,7 +17,7 @@
 var _ = require('lodash');
 var AWSClass = require('../lib/AWSClass.js');
 var Resource = require('../lib/Resource.js');
-var AttributeDefinition = require('../lib/properties/AttributeDefinition.js');
+var AttributeDefinition = require('../lib/properties/DynamodbAttributedef.js');
 
 exports.registerPropertyPrototypesTest = function(test){
     // Set up the class to extend Resource
