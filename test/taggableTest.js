@@ -41,3 +41,22 @@ exports.NameableTest = function(test){
 
     test.done();
 };
+
+exports.DescriptionTest = function(test){
+    var notTaggable = new Resource('notTaggableResource');
+    var taggable = new Taggable('taggableResource');
+
+    test.expect(3);
+    test.doesNotThrow(function(){
+        var testString = 'My fantastic test description';
+        taggable.addDescription(testString);
+        var tags = taggable.getTags();
+        test.ok(testString === tags[0].Value);
+    });
+
+    test.throws(function(){
+        notTaggable.addDescription('This should throw an error');
+    });
+
+    test.done();
+};
