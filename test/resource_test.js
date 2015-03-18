@@ -17,6 +17,8 @@
 var _ = require('lodash');
 var AWSClass = require('../lib/AWSClass.js');
 var Resource = require('../lib/Resource.js');
+var Table = require('../lib/DynamoDB/Table.js');
+var Template = require('../lib/Template.js');
 var AttributeDefinition = require('../lib/properties/DynamodbAttributedef.js');
 
 exports.registerPropertyPrototypesTest = function(test){
@@ -94,5 +96,30 @@ exports.registerPropertyPrototypesTest = function(test){
     }, 'Issue adding properties to the document');
 
     // All done!
+    test.done();
+};
+
+exports.testCanAddPropertyTypes = function(test) {
+    var t = new Template();
+    var attDef = new AttributeDefinition('asdf').AttributeName('testName').AttributeType('testType');
+    var table = new Table('myTestTable').AttributeDefinitions([ attDef ]);
+    t.addResource(table);
+    
+    // Make sure we only get the "node" of the property types
+    test.expect(2);
+    test.ok(t.template.Resources.myTestTable.Properties.AttributeDefinitions);
+    test.deepEqual(
+        attDef.node, 
+        t.template.Resources.myTestTable.Properties.AttributeDefinitions[0]
+    );
+    test.done();
+};
+
+exports.testShouldFailNoArray = function(test) {
+   test.done(); 
+};
+
+exports.testCanAddReferenceTypes = function(test) {
+    var t = new Template();
     test.done();
 };
