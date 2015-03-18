@@ -1,12 +1,13 @@
 'use strict';
 
 exports.TemplateReferencableStringsTest = function(test) {
-    var Scenery = require('../scenery.js');
     var Referencable = require('../lib/Referencable.js');
-    var t = new Scenery.Template();
+    var InternetGateway = require ('../lib/EC2/InternetGateway.js');
+    var VPCGatewayAttachment = require ('../lib/EC2/VPCGatewayAttachment.js');
+
     var myVpcId = 'testVpcId';
-    var myGateway = t.internetGateway(myVpcId+'gateway');
-    var internetGatewayAttachment = t.vpcGatewayAttachment(myVpcId+'InternetGateWayAttachment');
+    var myGateway = new InternetGateway(myVpcId+'gateway');
+    var internetGatewayAttachment = new VPCGatewayAttachment(myVpcId+'InternetGateWayAttachment');
     
     test.expect(2);
     test.ok(myGateway instanceof Referencable);
