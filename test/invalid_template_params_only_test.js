@@ -49,8 +49,8 @@ exports.testInvalidTemplateParamsOnly = function(test){
             'Param description should equal the description we assign it');
 
     // Assert that this template is invalid because there are no Resources (only Parameters)
-    function validationCallback(isValid, message){
-        test.ok(!isValid);
+    function validationCallback(err, message){
+        test.ok(err);
         test.ok(message.message.indexOf(
             'At least one Resources member must be defined') > -1);
         test.done();
