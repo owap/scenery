@@ -17,7 +17,9 @@
 var _ = require('lodash');
 var AWSClass = require('../lib/AWSClass.js');
 var Resource = require('../lib/Resource.js');
-var AttributeDefinition = require('../lib/properties/AttributeDefinition.js');
+var Table = require('../lib/DynamoDB/Table.js');
+var Template = require('../lib/Template.js');
+var AttributeDefinition = require('../lib/properties/DynamodbAttributedef.js');
 
 exports.registerPropertyPrototypesTest = function(test){
     // Set up the class to extend Resource
@@ -94,5 +96,53 @@ exports.registerPropertyPrototypesTest = function(test){
     }, 'Issue adding properties to the document');
 
     // All done!
+    test.done();
+};
+
+exports.testCanAddPropertyTypes = function(test) {
+    var t = new Template();
+    var attDef = new AttributeDefinition('asdf').AttributeName('testName').AttributeType('testType');
+    var table = new Table('myTestTable').AttributeDefinitions([ attDef ]);
+    t.addResource(table);
+
+    // Make sure we only get the "node" of the property types
+    test.expect(2);
+    test.ok(t.template.Resources.myTestTable.Properties.AttributeDefinitions);
+    test.deepEqual(
+        attDef.node,
+        t.template.Resources.myTestTable.Properties.AttributeDefinitions[0]
+    );
+    test.done();
+};
+
+exports.testShouldFailIfNoArray = function(test) {
+    test.expect(1);
+    test.throws(function(){
+        var attDef = new AttributeDefinition('asdf').AttributeName('testName').AttributeType('testType');
+        // We should error if we try to add attDef by itself, instead of as an array member
+        var table = new Table('myTestTable').AttributeDefinitions( attDef );
+    });
+    test.done();
+};
+
+exports.testCanAddReferenceTypes = function(test) {
+    var Instance = require('../lib/EC2/Instance.js');
+    var SecurityGroup = require('../lib/EC2/SecurityGroup.js');
+    var t = new Template();
+    var i = new Instance('myFantasticTestInstance');
+    var sg = new SecurityGroup('myMostExcellentSecurityGroup');
+    var expectedRefObj = { Ref: 'myMostExcellentSecurityGroup' };
+
+    i.SecurityGroupIds([sg]);
+    t.addResource(i);
+    t.addResource(sg);
+
+    test.expect(2);
+    test.ok(t.template.Resources);
+    test.deepEqual(
+        expectedRefObj,
+        t.template.Resources.myFantasticTestInstance.Properties.SecurityGroupIds[0]
+    );
+
     test.done();
 };
