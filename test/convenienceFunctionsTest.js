@@ -68,7 +68,7 @@ exports.testEasyUserData = function(test) {
     i4.easyUserData(commands);
     test.deepEqual(
         expectedCommands,
-        i3.node.Properties.UserData['Fn::Base64']['Fn::Join'][1]
+        i4.node.Properties.UserData['Fn::Base64']['Fn::Join'][1]
     );
 
     test.done();
