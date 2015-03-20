@@ -38,8 +38,8 @@ exports.testJustEC2 = function(test){
     // Assertions
     test.expect(2);
 
-    function validationCallback(isValid, message){
-        test.ok(isValid);
+    function validationCallback(err, message){
+        test.ok(!err);
         test.ok(!!message);
         test.done();
     }
