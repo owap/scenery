@@ -8,7 +8,7 @@ The entire [AWS CloudFormation API](http://docs.aws.amazon.com/AWSCloudFormation
 is available for use in Scenery, thanks to the [Scenery Generator](https://github.com/OpenWhere/scenery_generator)
 project, which generates Scenery classes from the Cloudformation docs.
 
-Please see the [examples](#TODO) folder for sample Scenery templates and the
+Please see the [examples](https://github.com/OpenWhere/scenery/tree/master/examples) folder for sample Scenery templates and the
 resulting CloudFormation template.
 
 ## Setup
@@ -33,7 +33,7 @@ for more information on this topic.
     - Run unit tests to make sure everything is passing correctly
 
 ## Building CloudFormation Templates
-To get started quickly, please see the [examples](#TODO)
+To get started quickly, please see the [examples](https://github.com/OpenWhere/scenery/tree/master/examples)
 folder for sample Scenery templates and the resulting CloudFormation template.
 
 Building CloudFormation templates can be boiled down into four basic steps:
@@ -73,39 +73,12 @@ t.addResource(i);
 // Write out the CloudFormation template
 t.save('ex1.json');
 ```
-The [resulting CloudFormation Template](#TODO)
+The [resulting CloudFormation Template](https://github.com/OpenWhere/scenery/tree/master/examples/ex1.json)
 is nearly twice as long and much less readable.
 
-Check out some more complex templates in the [examples](#TODO) folder.
+Check out some more complex templates in the [examples](https://github.com/OpenWhere/scenery/tree/master/examples/) folder.
 
-## Modifying Existing Cloudformation Templates
-To load an existing CloudFormation template from JSON into Scenery objects,
-invoke the `Template.parse()` function. For example:
-
-```javascript
-var myTemplate = Template.parse('/path/to/your/cf/template.JSON');
-```
-
-Once you've loaded objects into memory, you can reference them by their AWS
-type using the template object's `getResourcesByType` function:
-
-```javascript
-var myTemplate = Template.parse('/path/to/your/cf/template.JSON');
-var ec2Instances = myTemplate.getResourcesByType('AWS::EC2::Instance');
-
-// The ec2Instances var is an array of Scenery Instance objects
-var firstEc2Instance = ec2Instances[0];
-```
-
-Now that you have access to individual resources, you can modify them with
-standard Scenery functions. Save the template again to see the difference!
-
-
-## Example Workflow
-Below is an example workflow that highlights Scenery's ability to modify
-Cloudformation templates.
-
-### Modifying Existing Cloudformation Template
+## Modifying Existing Cloudformation Template
 Load and modify the template we created above:
 
 ```javascript
@@ -146,7 +119,7 @@ with the exception of our single EC2 instance:
 ...
 ```
 
-### Deleting Cloudformation Template Resources
+## Deleting Cloudformation Template Resources
 We can also remove resources from templates:
 
 ```javascript
@@ -201,7 +174,7 @@ and 2, but we deleted our once instances, so we have no Resources in the templat
 }
 ```
 
-#### Deleting Cloudformation Template Parameters
+## Deleting Cloudformation Template Parameters
 Similar to how we delete Resources, we can delete parameters from our Template
 object by invoking the `removeParameterByKey` function. Let's say we have the
 following CF Template with three parameters:
