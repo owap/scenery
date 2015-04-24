@@ -1,0 +1,25 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "",
+    "Parameters": {
+        "keyName": {
+            "Type": "String",
+            "Description": "Name of an existing keypair to use for accessing the instance",
+            "Default": "demo"
+        },
+        "image": {
+            "Type": "String",
+            "Description": "ID of the AMI image to use",
+            "Default": "ami-ecf9a184"
+        },
+        "instanceType": {
+            "Type": "String",
+            "Description": "The type of instance (compute capacity, etc.) to be created",
+            "Default": "m3.medium"
+        }
+    },
+    "Mappings": {},
+    "Conditions": {},
+    "Resources": {},
+    "Outputs": {}
+}
