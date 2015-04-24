@@ -1,7 +1,18 @@
 # Scenery: CloudFormation Templates in Javascript
+Scenery aims to simplify the creation of CloudFormation templates by using
+Javascript to generate them. This makes loops, variables, conditional logic, and
+convenience functions available for template generation, significantly reducing
+the number of lines needed while improving consistency throughout templates.
+
+The entire [AWS CloudFormation API](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-reference.html)
+is available for use in Scenery, thanks to the [Scenery Generator](https://github.com/OpenWhere/scenery_generator)
+project, which generates Scenery classes from the Cloudformation docs.
+
+Please see the [examples](#TODO) folder for sample Scenery templates and the
+resulting CloudFormation template.
 
 ## Setup
-+ Run `npm install` in the root scenery directory
++ Run `npm install` in the root Scenery directory
 + If you are not running on an EC2 instance, and you wish to run validations
 on your CloudFormation templates, you must add your AWS credentials to a file
 `config.json`:
