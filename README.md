@@ -1,4 +1,6 @@
 # Scenery: CloudFormation Templates in Javascript
+[![Code Climate](https://codeclimate.com/github/OpenWhere/scenery/badges/gpa.svg)](https://codeclimate.com/github/OpenWhere/scenery)
+
 Scenery aims to simplify the creation of CloudFormation templates by using
 Javascript to generate them. This makes loops, variables, conditional logic, and
 convenience functions available for template generation, significantly reducing
