@@ -24,6 +24,18 @@ exports.TaggableTypeTest = function(test){
     test.done();
 };
 
+exports.OverwriteTagTest = function(test){
+    var taggable = new Taggable('taggableResource');
+    taggable.addTag('testKey', 'failure');
+    taggable.addTag('testKey', 'success');
+
+    test.expect(2);
+    var myTags = taggable.getTags();
+    test.ok(myTags.length === 1);
+    test.ok(myTags[0].Value === 'success');
+    test.done();
+};
+
 exports.NameableTest = function(test){
     var notTaggable = new Resource('notTaggableResource');
     var taggable = new Taggable('taggableResource');
