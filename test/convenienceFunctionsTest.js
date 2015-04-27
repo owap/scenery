@@ -47,10 +47,10 @@ exports.testEasyUserData = function(test) {
             'echo "valid test"'
         ];
         var expectedUserData =  { 
-         'Fn::Base64' : { 
-            'Fn::Join' : [ '', commands ] 
-         }
-     };
+            'Fn::Base64' : {
+                'Fn::Join' : [ '', commands ]
+            }
+        };
         i3.easyUserData(commands);
         test.deepEqual(expectedUserData, i3.node.Properties.UserData);
     });

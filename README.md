@@ -1,7 +1,18 @@
 # Scenery: CloudFormation Templates in Javascript
+Scenery aims to simplify the creation of CloudFormation templates by using
+Javascript to generate them. This makes loops, variables, conditional logic, and
+convenience functions available for template generation, significantly reducing
+the number of lines needed while improving consistency throughout templates.
+
+The entire [AWS CloudFormation API](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-reference.html)
+is available for use in Scenery, thanks to the [Scenery Generator](https://github.com/OpenWhere/scenery_generator)
+project, which generates Scenery classes from the Cloudformation docs.
+
+Please see the [examples](https://github.com/OpenWhere/scenery/tree/master/examples) folder for sample Scenery templates and the
+resulting CloudFormation template.
 
 ## Setup
-+ Run `npm install` in the root scenery directory
++ Run `npm install` in the root Scenery directory
 + If you are not running on an EC2 instance, and you wish to run validations
 on your CloudFormation templates, you must add your AWS credentials to a file
 `config.json`:
@@ -22,179 +33,140 @@ for more information on this topic.
     - Run unit tests to make sure everything is passing correctly
 
 ## Building CloudFormation Templates
-To build CloudFormation templates, require the Scenery library into your
-project, and use it to instantiate `Template` (and other) objects that will
-be compiled to CloudFormation Templates.
+To get started quickly, please see the [examples](https://github.com/OpenWhere/scenery/tree/master/examples)
+folder for sample Scenery templates and the resulting CloudFormation template.
+
+Building CloudFormation templates can be boiled down into four basic steps:
+
+1. Include the Scenery classes you intend to use at the top of your file
+2. Create the Parameters and Resources you want to appear in your template
+3. Append these Parameters and Resources to a Template object
+4. Call `save()` on the template object, which writes the CloudFormation object to the specified path.
+
+Here's a simple example:
 
 ```javascript
-var Scenery = require('scenery');
-var filePath = '/tmp/myCloudformationTemplate.json';
+/**
+ * Example 1: A simple Scenery template for creating a single EC2 instance
+ **/
 
-var t = new Scenery.Template();
+// Create a new template object
+var Template = require('../lib/Template.js');
+var t = new Template();
 
-// Create a single EC2 instance in the tempalte
-t.ec2Instance('TestInstance')
-        .keyName('test-key')
-        .imageId('ami-123456')
-        .name('TestInstance');
+// Add some string parameters to our template.
+t.strParam('keyName', 'demo', 'Name of an existing keypair to use for accessing the instance');
+t.strParam('image', 'ami-ecf9a184', 'ID of the AMI image to use');
+t.strParam('instanceType', 'm3.medium', 'The type of instance (compute capacity, etc.) to be created');
 
-// Output Cloudformation JSON
-t.save(filePath);
+// Create the AWS::EC2::Instance
+var Instance = require('../lib/EC2/Instance.js');
+var i = new Instance('InstanceId')
+                .addName('Example 1 Test Instance')
+                .ImageId(t.ref('image'))
+                .InstanceType(t.ref('instanceType'))
+                .KeyName(t.ref('keyName'));
 
-// Validate Cloudformation JSON
-function validationCallback(isValid, message){
-    console.log('Is the template valid?', isValid, message);
-}
-var v = new Scenery.Validator(filePath, '/tmp/aws_config.json');
-v.validate(validationCallback);
+// Add our instance to our template
+t.addResource(i);
+
+// Write out the CloudFormation template
+t.save('ex1.json');
 ```
+The [resulting CloudFormation Template](https://github.com/OpenWhere/scenery/tree/master/examples/ex1.json)
+is nearly twice as long and much less readable.
 
-Invoking this code produces the following output:
-```
-Is the template valid? true { ResponseMetadata: { RequestId: 'a01b355f-555b-11e4-adf9-67e05ea3699c' },
-  Parameters: [],
-  Description: '',
-  Capabilities: [] }
-```
+Check out some more complex templates in the [examples](https://github.com/OpenWhere/scenery/tree/master/examples/) folder.
 
-Examples of more complex CloudFormation templates can be found in the `tests/`
-folder.
-
-## Modifying Existing Cloudformation Templates
-To load an existing CloudFormation template from JSON into Scenery objects,
-invoke the `Template.parse()` function. For example:
+## Modifying Existing Cloudformation Template
+Load and modify the template we created above:
 
 ```javascript
-var myTemplate = Template.parse('/path/to/your/cf/template.JSON');
+// Read in the CloudFormation JSON file
+var t2 = Template.parse('./ex1.json');
+
+// Find all the AWS::EC2::Instances in the template
+var ec2Instances = t2.getResourcesByType('AWS::EC2::Instance');
+
+// Modify the the first (and only) instance in the template
+var i2 = ec2Instances[0];
+i2.addName('Example 2 Test Instance');  // Modify the image name
+i2.ImageId('ami-000000');               // Modify the ImageId
+i2.InstanceType('t1.micro');            // Add an InstanceType
 ```
 
-Once you've loaded objects into memory, you can reference them by their AWS
-type using the template object's `getResourcesByType` function:
+Saving this template creates one that's identical to the one we made in `ex1`,
+with the exception of our single EC2 instance:
 
-```javascript
-var myTemplate = Template.parse('/path/to/your/cf/template.JSON');
-var ec2Instances = myTemplate.getResourcesByType('AWS::EC2::Instance');
-
-// The ec2Instances var is an array of Scenery Instance objects
-var firstEc2Instance = ec2Instances[0];
-```
-
-Now that you have access to individual resources, you can modify them with
-standard Scenery functions. Save the template again to see the difference!
-
-### Example Workflow
-Below is an example workflow that highlights Scenery's ability to modify
-Cloudformation templates.
-
-#### Create a CloudFormation Template in Javascript
-```javascript
-var Scenery = require('scenery');
-var filePath = '/tmp/myCloudformationTemplate.json';
-
-var t = new Scenery.Template();
-
-// Create a single EC2 instance in the tempalte
-t.ec2Instance('TestInstance')
-        .keyName('test-key')
-        .imageId('ami-123456')
-        .name('TestInstance');
-
-// Output Cloudformation JSON
-t.save(filePath);
-```
-This yields the following template:
 ```json
-{
-    "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "",
-    "Parameters": {},
-    "Mappings": {},
-    "Conditions": {},
-    "Resources": {
-        "TestInstance": {
+...
+        "InstanceId": {
             "Type": "AWS::EC2::Instance",
             "Properties": {
                 "Tags": [
                     {
                         "Key": "Name",
-                        "Value": "TestInstance",
-                        "PropagateAtLaunch": "true"
+                        "Value": "Example 2 Test Instance"
                     }
                 ],
-                "GroupDescription": "",
-                "KeyName": "test-key",
-                "ImageId": "ami-123456"
+                "ImageId": "ami-000000",
+                "InstanceType": "t1.micro",
+                "KeyName": {
+                    "Ref": "keyName"
+                }
             }
         }
-    },
-    "Outputs": {}
-}
+...
 ```
-#### Modifying Existing Cloudformation Template
-Now we're going to load and modify a resource in the Template we just created:
+
+## Deleting Cloudformation Template Resources
+We can also remove resources from templates:
 
 ```javascript
-var filePath = '/tmp/myCloudformationTemplate.json';
-var modifiedTemplate = Template.parse(filePath);
-var ec2Instances = modifiedTemplate.getResourcesByType('AWS::EC2::Instance');
+/**
+ * Example 3: Delete the instance we created in Example 1 and modified in Example 2
+ **/
 
-// The ec2Instances var is an array of Scenery Instance objects
+var Template = require('../lib/Template.js');
 
-var modifiedInstance = ec2Instances[0];
-modifiedInstance.imageId('ami-654321');         // Modify the ImageId
-modifiedInstance.instanceType('t1.micro');      // Add an InstanceType
-modifiedTemplate.save('/tmp/modifiedTemplate.json');
+// Read in the CloudFormation JSON file
+var t3 = Template.parse('./ex2.json');
+
+// Find all the AWS::EC2::Instances in the template
+var ec2Instances = t3.getResourcesByType('AWS::EC2::Instance');
+
+// Get the logical ID of our one EC2 instance
+var logicalId = ec2Instances[0].id;
+t3.removeResourceByKey(logicalId);
+
+// Save our modified template
+t3.save('ex3.json');
 ```
-... which yields the following CF Template:
+
+This results in a template that maintains the Parameters present in Examples 1
+and 2, but we deleted our once instances, so we have no Resources in the template:
+
 ```json
 {
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "",
-    "Parameters": {},
-    "Mappings": {},
-    "Conditions": {},
-    "Resources": {
-        "TestInstance": {
-            "Type": "AWS::EC2::Instance",
-            "Properties": {
-                "Tags": [
-                    {
-                        "Key": "Name",
-                        "Value": "TestInstance",
-                        "PropagateAtLaunch": "true"
-                    }
-                ],
-                "GroupDescription": "",
-                "KeyName": "test-key",
-                "ImageId": "ami-654321",
-                "InstanceType": "t1.micro"
-            }
+    "Parameters": {
+        "keyName": {
+            "Type": "String",
+            "Description": "Name of an existing keypair to use for accessing the instance",
+            "Default": "demo"
+        },
+        "image": {
+            "Type": "String",
+            "Description": "ID of the AMI image to use",
+            "Default": "ami-ecf9a184"
+        },
+        "instanceType": {
+            "Type": "String",
+            "Description": "The type of instance (compute capacity, etc.) to be created",
+            "Default": "m3.medium"
         }
     },
-    "Outputs": {}
-}
-```
-
-#### Deleting Cloudformation Template Resources
-We can also remove resources from templates. We'll begin by loading the previous
-template:
-```javascript
-var modifiedTemplate = Template.parse('/tmp/modifiedTemplate.json');
-var ec2Instances = modifiedTemplate.getResourcesByType('AWS::EC2::Instance');
-
-// Remove the ec2 instance
-var key = ec2Instances[0].id;               // Get the ID of the instance to remove
-modifiedTemplate.removeResourceByKey(key);
-modifiedTemplate.save('/tmp/emptyTemplate.json');
-```
-
-If you open the `emptyTemplate.json` file that we just saved to disk, you will
-see that our only resource (from the previous examples) is no longer present:
-```json
-{
-    "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "",
-    "Parameters": {},
     "Mappings": {},
     "Conditions": {},
     "Resources": {},
@@ -202,7 +174,7 @@ see that our only resource (from the previous examples) is no longer present:
 }
 ```
 
-#### Deleting Cloudformation Template Parameters
+## Deleting Cloudformation Template Parameters
 Similar to how we delete Resources, we can delete parameters from our Template
 object by invoking the `removeParameterByKey` function. Let's say we have the
 following CF Template with three parameters:
