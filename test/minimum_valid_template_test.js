@@ -19,6 +19,7 @@
  * validator marks it as valid
  **/
 var Template = require('../lib/Template.js');
+var Instance = require('../lib/EC2/Instance.js');
 var Validator = require('../lib/Validator.js');
 
 exports.testJustEC2 = function(test){
@@ -26,18 +27,19 @@ exports.testJustEC2 = function(test){
     var t = new Template();
     var filePath = '/tmp/minimum_valid_test_template.json';
 
-     t.ec2Instance('TestInstance')
+    t.addResource( new Instance('TestInstance')
         .KeyName('test-key')
         .ImageId('ami-123456')
-        .Name('TestInstance');
+        .addName('TestInstance')
+    );
 
     t.save(filePath);
 
     // Assertions
     test.expect(2);
 
-    function validationCallback(isValid, message){
-        test.ok(isValid);
+    function validationCallback(err, message){
+        test.ok(!err);
         test.ok(!!message);
         test.done();
     }

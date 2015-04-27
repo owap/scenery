@@ -25,9 +25,12 @@ exports.registryTest = function(test){
     test.expect(2);
     test.ok(!!registry.awsClassMap);
 
-    var ExpectedInstance = require('../lib/EC2/Instance.js');
-    var TestInstance = registry.getClass('AWS::EC2::Instance');
+    var ExpectedClass = require('../lib/EC2/Instance.js');
+    var TestClass = registry.getClass('AWS::EC2::Instance');
 
-    test.deepEqual(TestInstance, ExpectedInstance, 'The registered class should equal the class referenced by the AWS moniker');
+    var testInstance = new TestClass ();
+    var expectedInstance = new ExpectedClass();
+
+    test.deepEqual(testInstance, expectedInstance, 'The registered class should equal the class referenced by the AWS moniker');
     test.done();
 };

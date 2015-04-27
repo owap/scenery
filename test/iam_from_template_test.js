@@ -19,7 +19,7 @@
 // cloudformation templates.
 
 var Template = require('../lib/Template.js');
-var Role = require('../lib/iam/Role.js');
+var Role = require('../lib/IAM/Role.js');
 var path = require('path');
 
 var originalPath = path.join(__dirname, 'landscapes', 'VPC.json');
