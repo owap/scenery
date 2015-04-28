@@ -1,4 +1,5 @@
 # Scenery: CloudFormation Templates in Javascript
+[![Build Status](https://travis-ci.org/OpenWhere/scenery.svg?branch=develop)](https://travis-ci.org/OpenWhere/scenery)
 [![Code Climate](https://codeclimate.com/github/OpenWhere/scenery/badges/gpa.svg)](https://codeclimate.com/github/OpenWhere/scenery)
 
 Scenery aims to simplify the creation of CloudFormation templates by using
