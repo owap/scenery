@@ -1,7 +1,7 @@
 {
   "name": "scenery",
   "version": "0.2.0",
-  "description": "Flip your AWS Stacks into existance with Scenery: The CloudFormation Javascript Library.",
+  "description": "CloudFormation Templates in Javascript",
   "main": "scenery.js",
   "scripts": {
     "test": "grunt nodeunit"
