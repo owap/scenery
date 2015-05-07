@@ -36,7 +36,7 @@ exports.testInvalidTemplateParamsOnly = function(test){
 
     // Read saved template
     var tLoaded = Template.parse(filePath);
-    test.expect(7);
+    test.expect(4);
 
     // Test that the template we load equals the one we created above
     test.deepEqual(tLoaded, t,
@@ -48,6 +48,8 @@ exports.testInvalidTemplateParamsOnly = function(test){
     test.strictEqual(tLoaded.template.Parameters[paramKey].Description, paramDesc,
             'Param description should equal the description we assign it');
 
+    test.done();
+    /* Commenting out validation tests because we can't include AWS credentials on Travis
     // Assert that this template is invalid because there are no Resources (only Parameters)
     function validationCallback(err, message){
         test.ok(err);
@@ -61,4 +63,5 @@ exports.testInvalidTemplateParamsOnly = function(test){
         var v = new Validator(filePath, __dirname+'/../config.json');
         v.validate(validationCallback);
     });
+    */
 };
